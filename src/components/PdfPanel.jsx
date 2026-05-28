@@ -187,8 +187,8 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [tempPageInput, setTempPageInput] = useState('1');
 
-  // Fit and Zoom states: start fitted vertically ('height') by default
-  const [fitMode, setFitMode] = useState('height');
+  // Fit and Zoom states: start fitted horizontally ('width') by default
+  const [fitMode, setFitMode] = useState('width');
   const [zoomScale, setZoomScale] = useState(1.0);
   
   const [isLoading, setIsLoading] = useState(false);
