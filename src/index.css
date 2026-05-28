@@ -1,0 +1,291 @@
+@import "tailwindcss";
+
+/* ===== CSS Custom Properties via @theme ===== */
+@theme {
+  --font-sans: 'Outfit', sans-serif;
+  --color-accent: hsl(210, 100%, 60%);
+  --color-danger: hsl(0, 84%, 60%);
+  --color-success: hsl(142, 70%, 45%);
+}
+
+/* ===== Theme variables ===== */
+:root {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --transition-speed: 0.3s;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Theme: Light */
+.theme-light {
+  --bg-app: hsl(220, 20%, 95%);
+  --bg-glass: rgba(255, 255, 255, 0.72);
+  --bg-glass-active: rgba(255, 255, 255, 0.92);
+  --bg-glass-hover: rgba(255, 255, 255, 0.85);
+  --border-glass: rgba(0, 0, 0, 0.08);
+  --border-glass-glow: rgba(0, 0, 0, 0.18);
+  --text-primary: hsl(222, 47%, 12%);
+  --text-secondary: hsl(215, 25%, 35%);
+  --text-muted: hsl(215, 16%, 50%);
+  --accent-color: hsl(212, 100%, 48%);
+  --accent-color-rgb: 0, 102, 255;
+  --danger-color: hsl(0, 84%, 60%);
+  --success-color: hsl(142, 70%, 45%);
+  --board-outline: rgba(0, 0, 0, 0.12);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.18);
+  --scrollbar-track: rgba(0, 0, 0, 0.04);
+}
+
+/* Theme: Dark */
+.theme-dark {
+  --bg-app: hsl(224, 71%, 4%);
+  --bg-glass: rgba(10, 15, 30, 0.68);
+  --bg-glass-active: rgba(17, 24, 39, 0.92);
+  --bg-glass-hover: rgba(15, 23, 42, 0.8);
+  --border-glass: rgba(255, 255, 255, 0.07);
+  --border-glass-glow: rgba(255, 255, 255, 0.18);
+  --text-primary: hsl(210, 40%, 98%);
+  --text-secondary: hsl(215, 20%, 72%);
+  --text-muted: hsl(215, 12%, 48%);
+  --accent-color: hsl(210, 100%, 60%);
+  --accent-color-rgb: 59, 130, 246;
+  --danger-color: hsl(0, 84%, 60%);
+  --success-color: hsl(142, 70%, 45%);
+  --board-outline: rgba(255, 255, 255, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.55);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.14);
+  --scrollbar-track: rgba(255, 255, 255, 0.03);
+}
+
+/* ===== Global Resets ===== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  transition: background-color var(--transition-speed) var(--transition-timing),
+              color var(--transition-speed) var(--transition-timing);
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+/* ===== Glassmorphism: Panel ===== */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px var(--shadow-color);
+  transition: background-color var(--transition-speed) var(--transition-timing),
+              border-color var(--transition-speed) var(--transition-timing),
+              box-shadow var(--transition-speed) var(--transition-timing);
+}
+
+.glass-panel-active {
+  background: var(--bg-glass-active);
+  border-color: var(--border-glass-glow);
+}
+
+/* ===== Glassmorphism: Button ===== */
+.glass-button {
+  background: var(--bg-glass);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background-color 0.2s var(--transition-timing),
+              border-color 0.2s var(--transition-timing),
+              transform 0.12s var(--transition-timing),
+              box-shadow 0.2s var(--transition-timing);
+  user-select: none;
+}
+
+.glass-button:hover:not(:disabled) {
+  background: var(--bg-glass-hover);
+  border-color: var(--border-glass-glow);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--shadow-color);
+}
+
+.glass-button:active:not(:disabled) {
+  transform: translateY(0px) scale(0.98);
+}
+
+.glass-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.glass-button.active {
+  background: var(--accent-color);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 0 16px rgba(var(--accent-color-rgb), 0.35);
+}
+
+/* ===== Layout ===== */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.panels-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.left-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.right-panel {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ===== Resizer ===== */
+.resizer {
+  width: 6px;
+  height: 100%;
+  background: transparent;
+  cursor: col-resize;
+  position: relative;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+}
+
+.resizer::after {
+  content: '';
+  width: 3px;
+  height: 28px;
+  background-color: var(--border-glass-glow);
+  border-radius: 3px;
+  transition: height 0.25s, background-color 0.25s, box-shadow 0.25s;
+}
+
+.resizer:hover, .resizer.active {
+  background: rgba(var(--accent-color-rgb), 0.12);
+}
+
+.resizer:hover::after, .resizer.active::after {
+  height: 80px;
+  background-color: var(--accent-color);
+  box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.4);
+}
+
+.is-resizing iframe,
+.is-resizing .chessboard-wrapper {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+/* ===== Chessboard ===== */
+.chessboard-wrapper {
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: min(800px, calc(100% - 160px), calc(100vh - 180px));
+  margin: 0 auto;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 12px 48px var(--shadow-color);
+  border: 3px solid var(--board-outline);
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* ===== Custom Scrollbars ===== */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--accent-color-rgb), 0.5);
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s var(--transition-timing) forwards;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.2); }
+  50% { box-shadow: 0 0 18px rgba(var(--accent-color-rgb), 0.5); }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 768px) {
+  .panels-container {
+    flex-direction: column !important;
+    overflow-y: auto;
+  }
+
+  .left-panel, .right-panel {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 50vh;
+    flex: none !important;
+  }
+
+  .resizer {
+    display: none;
+  }
+}
