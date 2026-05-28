@@ -426,12 +426,40 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
     return { width, height };
   }, [containerSize, pageAspectRatio, fitMode, zoomScale]);
 
+  // Sync ref to currentPage to prevent exhaustive-deps warn and ensure fresh reading value inside resize scroll effect
+  const currentPageRef = useRef(currentPage);
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
+
+  // Keep the current active page centered/top-aligned when the container is resized (both split drags and window resizes)
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+  useEffect(() => {
+    if (!pdfDoc || numPages === 0 || !viewportElementRef.current) return;
+    
+    // Only scroll if this is an actual resize after the initial container size has been measured
+    if (lastSizeRef.current.width !== 0 && lastSizeRef.current.height !== 0) {
+      const element = viewportElementRef.current.querySelector(`.pdf-page-placeholder[data-page-number="${currentPageRef.current}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'auto', block: 'start' });
+      }
+    }
+    
+    lastSizeRef.current = { width: containerSize.width, height: containerSize.height };
+  }, [containerSize.width, containerSize.height, pdfDoc, numPages]);
+
   // High performance IntersectionObserver to track visible pages and update scroll sync page indicator
   useEffect(() => {
     if (!pdfDoc || numPages === 0 || !viewportElementRef.current) return;
 
     const observer = new IntersectionObserver((entries) => {
       setVisiblePages((prev) => {
+        // Skip state updates completely if the resizer divider is actively being dragged
+        const isResizing = document.querySelector('.app-layout')?.classList.contains('is-resizing');
+        if (isResizing) {
+          return prev;
+        }
+
         const next = new Set(prev);
         entries.forEach((entry) => {
           const pageNum = parseInt(entry.target.getAttribute('data-page-number'), 10);
@@ -482,7 +510,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
     return () => {
       observer.disconnect();
     };
-  }, [pdfDoc, numPages, pageDimensions, containerSize.width, containerSize.height]);
+  }, [pdfDoc, numPages, pageDimensions, containerSize.width, containerSize.height, currentPage, localStorageKey]);
 
   // Adjust zoom scales smoothly when clicking zoom in/out buttons
   const handleZoomIn = () => {
