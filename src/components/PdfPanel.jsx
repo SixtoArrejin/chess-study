@@ -1,5 +1,5 @@
 import React, { useRef, useState, useMemo, useEffect, useCallback } from 'react';
-import { Upload, FileText, ChevronLeft, ChevronRight, Plus, Minus } from 'lucide-react';
+import { Upload, FileText, ChevronLeft, ChevronRight, Plus, Minus, MoveHorizontal } from 'lucide-react';
 
 // Safe, race-free dynamic script loader for PDF.js CDN
 let pdfjsLoadingPromise = null;
@@ -660,22 +660,14 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
               </div>
 
               {/* PDF Aspect Ratio Fitting Controls */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <button
-                  className={`glass-button ${fitMode === 'height' ? 'active' : ''}`}
-                  onClick={() => setFitMode('height')}
-                  style={{ padding: '0 10px', height: 26, borderRadius: 6, fontSize: 10 }}
-                  title="Ajustar al Alto de la Pantalla"
-                >
-                  Alto
-                </button>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
                 <button
                   className={`glass-button ${fitMode === 'width' ? 'active' : ''}`}
                   onClick={() => setFitMode('width')}
-                  style={{ padding: '0 10px', height: 26, borderRadius: 6, fontSize: 10 }}
-                  title="Ajustar al Ancho de la Pantalla"
+                  style={{ padding: '0 8px', height: 26, borderRadius: 6 }}
+                  title="Ajustar al Ancho (Restaurar ajuste automático)"
                 >
-                  Ancho
+                  <MoveHorizontal style={{ width: 14, height: 14 }} />
                 </button>
               </div>
 
