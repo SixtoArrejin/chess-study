@@ -30,7 +30,7 @@ function loadPdfJS() {
 }
 
 // Sub-component to render a single PDF page on demand (lazy loading) with canvas and Text Layer for text selection
-function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
+function PdfPage({ pdfDoc, pageNum, dimensions, renderDimensions, isVisible }) {
   const canvasRef = useRef(null);
   const textLayerRef = useRef(null);
   const renderTaskRef = useRef(null);
@@ -75,14 +75,12 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
 
         const dpr = window.devicePixelRatio || 1;
         const originalViewport = page.getViewport({ scale: 1 });
-        const scale = dimensions.width / originalViewport.width;
+        const scale = renderDimensions.width / originalViewport.width;
         
-        // 1. Crisp high-resolution canvas viewport
+        // 1. Crisp high-resolution canvas viewport using debounced dimensions for drawing
         const canvasViewport = page.getViewport({ scale: scale * dpr });
         canvas.width = canvasViewport.width;
         canvas.height = canvasViewport.height;
-        canvas.style.width = `${canvasViewport.width / dpr}px`;
-        canvas.style.height = `${canvasViewport.height / dpr}px`;
 
         const renderContext = {
           canvasContext: context,
@@ -96,7 +94,7 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
         
         if (!active) return;
         
-        // 2. CSS-aligned Text Layer (CSS pixels)
+        // 2. CSS-aligned Text Layer (CSS pixels) using debounced dimensions
         const textViewport = page.getViewport({ scale: scale });
         textLayerDiv.innerHTML = '';
         textLayerDiv.style.width = `${textViewport.width}px`;
@@ -133,7 +131,7 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
         renderTaskRef.current.cancel();
       }
     };
-  }, [pdfDoc, pageNum, dimensions, isVisible, pageRatio]);
+  }, [pdfDoc, pageNum, renderDimensions, isVisible, pageRatio]);
 
   return (
     <div
@@ -161,7 +159,10 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
           top: 0,
           left: 0,
           borderRadius: 4,
-          display: isRendered ? 'block' : 'none'
+          display: isRendered ? 'block' : 'none',
+          // Force immediate dimensions for CSS stretching! This guarantees 60fps fluid resizes with zero flicker.
+          width: `${dimensions.width}px`,
+          height: `${localHeight}px`,
         }}
       />
       
@@ -176,6 +177,9 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
           borderRadius: 4,
           zIndex: 2,
           pointerEvents: 'auto',
+          // Stretch the text overlay in synchrony with the canvas
+          width: `${dimensions.width}px`,
+          height: `${localHeight}px`,
         }}
       />
 
@@ -425,6 +429,24 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
 
     return { width, height };
   }, [containerSize, pageAspectRatio, fitMode, zoomScale]);
+
+  // Debounce page dimensions during active window/pane resizing to avoid canvas redraw flickers
+  const [debouncedDimensions, setDebouncedDimensions] = useState(pageDimensions);
+  useEffect(() => {
+    const isResizing = document.querySelector('.app-layout')?.classList.contains('is-resizing');
+    if (!isResizing) {
+      setDebouncedDimensions(pageDimensions);
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      setDebouncedDimensions(pageDimensions);
+    }, 120); // 120ms is the sweet spot for smooth 60fps dragging and instant rendering when stopped
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [pageDimensions]);
 
   // Sync ref to currentPage to prevent exhaustive-deps warn and ensure fresh reading value inside resize scroll effect
   const currentPageRef = useRef(currentPage);
@@ -727,6 +749,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
                     pdfDoc={pdfDoc}
                     pageNum={pageNum}
                     dimensions={pageDimensions}
+                    renderDimensions={debouncedDimensions}
                     isVisible={visiblePages.has(pageNum)}
                   />
                 ))
