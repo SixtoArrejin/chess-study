@@ -35,6 +35,22 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
   const textLayerRef = useRef(null);
   const renderTaskRef = useRef(null);
   const [isRendered, setIsRendered] = useState(false);
+  
+  // Local aspect ratio to support varying page dimensions (very common in scanned books like Grau)
+  const [pageRatio, setPageRatio] = useState(dimensions.height / dimensions.width);
+
+  useEffect(() => {
+    if (!pdfDoc) return;
+    let active = true;
+    pdfDoc.getPage(pageNum).then((page) => {
+      if (!active) return;
+      const viewport = page.getViewport({ scale: 1 });
+      setPageRatio(viewport.height / viewport.width);
+    }).catch(err => console.error(err));
+    return () => { active = false; };
+  }, [pdfDoc, pageNum]);
+
+  const localHeight = dimensions.width * pageRatio;
 
   useEffect(() => {
     if (!isVisible) {
@@ -59,21 +75,18 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
 
         const dpr = window.devicePixelRatio || 1;
         const originalViewport = page.getViewport({ scale: 1 });
-        
-        // Calculate the scale to match the target dimensions exactly
         const scale = dimensions.width / originalViewport.width;
-        const viewport = page.getViewport({ scale });
-
-        // Size the canvas for high DPI displays
-        canvas.width = viewport.width * dpr;
-        canvas.height = viewport.height * dpr;
-        canvas.style.width = `${viewport.width}px`;
-        canvas.style.height = `${viewport.height}px`;
+        
+        // 1. Crisp high-resolution canvas viewport
+        const canvasViewport = page.getViewport({ scale: scale * dpr });
+        canvas.width = canvasViewport.width;
+        canvas.height = canvasViewport.height;
+        canvas.style.width = `${canvasViewport.width / dpr}px`;
+        canvas.style.height = `${canvasViewport.height / dpr}px`;
 
         const renderContext = {
           canvasContext: context,
-          viewport: viewport,
-          transform: [dpr, 0, 0, dpr, 0, 0]
+          viewport: canvasViewport
         };
 
         const renderTask = page.render(renderContext);
@@ -83,10 +96,15 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
         
         if (!active) return;
         
-        // Render Text Layer on top of canvas for copy-paste selection
+        // 2. CSS-aligned Text Layer (CSS pixels)
+        const textViewport = page.getViewport({ scale: scale });
         textLayerDiv.innerHTML = '';
-        textLayerDiv.style.width = `${viewport.width}px`;
-        textLayerDiv.style.height = `${viewport.height}px`;
+        textLayerDiv.style.width = `${textViewport.width}px`;
+        textLayerDiv.style.height = `${textViewport.height}px`;
+        
+        // Critically important: Set scale-factor CSS variable so the PDF.js stylesheet 
+        // scales the text overlay divs exactly to match the canvas words
+        textLayerDiv.style.setProperty('--scale-factor', String(textViewport.scale));
 
         const textContent = await page.getTextContent();
         
@@ -95,7 +113,7 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
         window.pdfjsLib.renderTextLayer({
           textContentSource: textContent,
           container: textLayerDiv,
-          viewport: viewport,
+          viewport: textViewport,
           textDivs: []
         });
 
@@ -115,7 +133,7 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
         renderTaskRef.current.cancel();
       }
     };
-  }, [pdfDoc, pageNum, dimensions, isVisible]);
+  }, [pdfDoc, pageNum, dimensions, isVisible, pageRatio]);
 
   return (
     <div
@@ -123,7 +141,7 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
       data-page-number={pageNum}
       style={{
         width: dimensions.width,
-        height: dimensions.height,
+        height: localHeight,
         position: 'relative',
         marginBottom: 20,
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
@@ -133,6 +151,7 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
         justifyContent: 'center',
         alignItems: 'center',
         flexShrink: 0,
+        overflow: 'hidden', // prevents page bleeding and gluing issues
       }}
     >
       <canvas
