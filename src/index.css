@@ -26,8 +26,8 @@
   --text-primary: hsl(222, 47%, 12%);
   --text-secondary: hsl(215, 25%, 35%);
   --text-muted: hsl(215, 16%, 50%);
-  --accent-color: hsl(212, 100%, 48%);
-  --accent-color-rgb: 0, 102, 255;
+  --accent-color: hsl(224, 76%, 40%);
+  --accent-color-rgb: 30, 64, 175;
   --danger-color: hsl(0, 84%, 60%);
   --success-color: hsl(142, 70%, 45%);
   --board-outline: rgba(0, 0, 0, 0.12);
@@ -161,6 +161,22 @@ body {
   color: #ffffff !important;
   border-color: rgba(var(--accent-color-rgb), 0.85) !important;
   box-shadow: 0 4px 20px rgba(var(--accent-color-rgb), 0.4) !important;
+}
+
+/* active-outline active button styling */
+.glass-button.active-outline {
+  background: rgba(var(--accent-color-rgb), 0.05);
+  color: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.12);
+  backdrop-filter: blur(4px);
+}
+
+.glass-button.active-outline:hover:not(:disabled) {
+  background: rgba(var(--accent-color-rgb), 0.12) !important;
+  color: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 4px 12px rgba(var(--accent-color-rgb), 0.2) !important;
 }
 
 /* ===== Layout ===== */

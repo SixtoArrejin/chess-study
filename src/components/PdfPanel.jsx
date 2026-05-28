@@ -37,7 +37,8 @@ function PdfPage({ pdfDoc, pageNum, dimensions, renderDimensions, isVisible }) {
   const [isRendered, setIsRendered] = useState(false);
   
   // Local aspect ratio to support varying page dimensions (very common in scanned books like Grau)
-  const [pageRatio, setPageRatio] = useState(dimensions.height / dimensions.width);
+  const defaultRatio = dimensions?.height && dimensions?.width ? dimensions.height / dimensions.width : 1.414;
+  const [pageRatio, setPageRatio] = useState(defaultRatio);
 
   useEffect(() => {
     if (!pdfDoc) return;
@@ -50,10 +51,14 @@ function PdfPage({ pdfDoc, pageNum, dimensions, renderDimensions, isVisible }) {
     return () => { active = false; };
   }, [pdfDoc, pageNum]);
 
-  const localHeight = dimensions.width * pageRatio;
+  const localWidth = Math.floor(dimensions?.width || 450);
+  const localHeight = Math.floor(localWidth * (pageRatio || 1.414));
+
+  // Use primitive render width to trigger redraws instead of object reference changes
+  const renderWidth = renderDimensions?.width ? Math.floor(renderDimensions.width) : 0;
 
   useEffect(() => {
-    if (!isVisible) {
+    if (!isVisible || !pdfDoc || !renderWidth) {
       setIsRendered(false);
       return;
     }
@@ -75,12 +80,15 @@ function PdfPage({ pdfDoc, pageNum, dimensions, renderDimensions, isVisible }) {
 
         const dpr = window.devicePixelRatio || 1;
         const originalViewport = page.getViewport({ scale: 1 });
-        const scale = renderDimensions.width / originalViewport.width;
         
-        // 1. Crisp high-resolution canvas viewport using debounced dimensions for drawing
-        const canvasViewport = page.getViewport({ scale: scale * dpr });
-        canvas.width = canvasViewport.width;
-        canvas.height = canvasViewport.height;
+        // Strict rounded integer dimensions matching physical pixels to ensure razor-sharp HD quality
+        const roundedWidth = renderWidth;
+        const roundedHeight = Math.floor(roundedWidth * pageRatio);
+        
+        canvas.width = Math.floor(roundedWidth * dpr);
+        canvas.height = Math.floor(roundedHeight * dpr);
+
+        const canvasViewport = page.getViewport({ scale: canvas.width / originalViewport.width });
 
         const renderContext = {
           canvasContext: context,
@@ -92,10 +100,10 @@ function PdfPage({ pdfDoc, pageNum, dimensions, renderDimensions, isVisible }) {
 
         await renderTask.promise;
         
-        if (!active) return;
+        if (!active || !canvasRef.current || !textLayerRef.current) return;
         
         // 2. CSS-aligned Text Layer (CSS pixels) using debounced dimensions
-        const textViewport = page.getViewport({ scale: scale });
+        const textViewport = page.getViewport({ scale: roundedWidth / originalViewport.width });
         textLayerDiv.innerHTML = '';
         textLayerDiv.style.width = `${textViewport.width}px`;
         textLayerDiv.style.height = `${textViewport.height}px`;
@@ -106,7 +114,7 @@ function PdfPage({ pdfDoc, pageNum, dimensions, renderDimensions, isVisible }) {
 
         const textContent = await page.getTextContent();
         
-        if (!active) return;
+        if (!active || !textLayerRef.current) return;
 
         window.pdfjsLib.renderTextLayer({
           textContentSource: textContent,
@@ -131,14 +139,14 @@ function PdfPage({ pdfDoc, pageNum, dimensions, renderDimensions, isVisible }) {
         renderTaskRef.current.cancel();
       }
     };
-  }, [pdfDoc, pageNum, renderDimensions, isVisible, pageRatio]);
+  }, [pdfDoc, pageNum, renderWidth, isVisible, pageRatio]);
 
   return (
     <div
       className="pdf-page-placeholder"
       data-page-number={pageNum}
       style={{
-        width: dimensions.width,
+        width: localWidth,
         height: localHeight,
         position: 'relative',
         marginBottom: 20,
@@ -161,7 +169,7 @@ function PdfPage({ pdfDoc, pageNum, dimensions, renderDimensions, isVisible }) {
           borderRadius: 4,
           display: isRendered ? 'block' : 'none',
           // Force immediate dimensions for CSS stretching! This guarantees 60fps fluid resizes with zero flicker.
-          width: `${dimensions.width}px`,
+          width: `${localWidth}px`,
           height: `${localHeight}px`,
         }}
       />
@@ -178,7 +186,7 @@ function PdfPage({ pdfDoc, pageNum, dimensions, renderDimensions, isVisible }) {
           zIndex: 2,
           pointerEvents: 'auto',
           // Stretch the text overlay in synchrony with the canvas
-          width: `${dimensions.width}px`,
+          width: `${localWidth}px`,
           height: `${localHeight}px`,
         }}
       />
@@ -433,15 +441,12 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
   // Debounce page dimensions during active window/pane resizing to avoid canvas redraw flickers
   const [debouncedDimensions, setDebouncedDimensions] = useState(pageDimensions);
   useEffect(() => {
-    const isResizing = document.querySelector('.app-layout')?.classList.contains('is-resizing');
-    if (!isResizing) {
-      setDebouncedDimensions(pageDimensions);
-      return;
-    }
-
+    // ALWAYS debounce during active changes (splitter dragging and window resizing)
+    // This allows hardware-accelerated CSS stretching to handle the 60fps scaling fluidly
+    // and only triggers a high-quality PDF page canvas redraw 200ms after the resizing stops!
     const handler = setTimeout(() => {
       setDebouncedDimensions(pageDimensions);
-    }, 120); // 120ms is the sweet spot for smooth 60fps dragging and instant rendering when stopped
+    }, 200);
 
     return () => {
       clearTimeout(handler);
@@ -662,7 +667,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
               {/* PDF Aspect Ratio Fitting Controls */}
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <button
-                  className={`glass-button ${fitMode === 'width' ? 'active' : ''}`}
+                  className={`glass-button ${fitMode === 'width' ? 'active-outline' : ''}`}
                   onClick={() => setFitMode('width')}
                   style={{ padding: '0 8px', height: 26, borderRadius: 6 }}
                   title="Ajustar al Ancho (Restaurar ajuste automático)"
