@@ -459,7 +459,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
   useEffect(() => {
     if (!pdfDoc || numPages === 0 || !viewportElementRef.current) return;
     
-    // Only scroll if this is an actual resize after the initial container size has been measured
+    // Only scroll if this is an actual resize or fit/zoom layout adjustment
     if (lastSizeRef.current.width !== 0 && lastSizeRef.current.height !== 0) {
       const element = viewportElementRef.current.querySelector(`.pdf-page-placeholder[data-page-number="${currentPageRef.current}"]`);
       if (element) {
@@ -468,7 +468,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
     }
     
     lastSizeRef.current = { width: containerSize.width, height: containerSize.height };
-  }, [containerSize.width, containerSize.height, pdfDoc, numPages]);
+  }, [containerSize.width, containerSize.height, fitMode, zoomScale, pdfDoc, numPages]);
 
   // High performance IntersectionObserver to track visible pages and update scroll sync page indicator
   useEffect(() => {
@@ -522,7 +522,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
       });
     }, {
       root: viewportElementRef.current,
-      rootMargin: '250px 0px 250px 0px', // preload pages 250px before entering viewport for a super smooth scroll experience
+      rootMargin: '1600px 0px 1600px 0px', // wide preloading window (approx 1.5 - 2 pages) to ensure zero blank pages when scrolling
       threshold: 0.1
     });
 
