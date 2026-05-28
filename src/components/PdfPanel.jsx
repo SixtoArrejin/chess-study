@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo, useEffect } from 'react';
+import React, { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import { Upload, FileText, ChevronLeft, ChevronRight, Plus, Minus } from 'lucide-react';
 
 // Safe, race-free dynamic script loader for PDF.js CDN
@@ -176,7 +176,10 @@ function PdfPage({ pdfDoc, pageNum, dimensions, isVisible }) {
 export default function PdfPanel({ pdfFile, setPdfFile }) {
   const fileInputRef = useRef(null);
   const containerRef = useRef(null);
-  const viewportRef = useRef(null);
+  
+  // Callback ref mechanism to attach ResizeObserver reliably even on conditional mounts
+  const resizeObserverRef = useRef(null);
+  const viewportElementRef = useRef(null);
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [pdfDoc, setPdfDoc] = useState(null);
@@ -201,19 +204,34 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
     return `chess_study_last_page_${pdfFile.name}_${pdfFile.size}`;
   }, [pdfFile]);
 
-  // Track container dimensions to dynamically resize pages on division changes
-  useEffect(() => {
-    if (!viewportRef.current) return;
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) {
+  const viewportRef = useCallback((node) => {
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
+      resizeObserverRef.current = null;
+    }
+
+    if (node !== null) {
+      viewportElementRef.current = node;
+      
+      // Set initial dimensions immediately so there's no layout delay
+      setContainerSize({
+        width: node.clientWidth,
+        height: node.clientHeight
+      });
+
+      const observer = new ResizeObserver((entries) => {
+        if (!entries || !entries.length) return;
+        const entry = entries[0];
         setContainerSize({
           width: entry.contentRect.width,
           height: entry.contentRect.height
         });
-      }
-    });
-    resizeObserver.observe(viewportRef.current);
-    return () => resizeObserver.disconnect();
+      });
+      observer.observe(node);
+      resizeObserverRef.current = observer;
+    } else {
+      viewportElementRef.current = null;
+    }
   }, []);
 
   const handleFileChange = (e) => {
@@ -233,9 +251,9 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
 
   // Scroll smoothly to a specific page
   const scrollToPage = (pageNum) => {
-    if (!viewportRef.current || !pdfDoc) return;
+    if (!viewportElementRef.current || !pdfDoc) return;
     const target = Math.max(1, Math.min(numPages, pageNum));
-    const element = viewportRef.current.querySelector(`.pdf-page-placeholder[data-page-number="${target}"]`);
+    const element = viewportElementRef.current.querySelector(`.pdf-page-placeholder[data-page-number="${target}"]`);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       setCurrentPage(target);
@@ -391,7 +409,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
 
   // High performance IntersectionObserver to track visible pages and update scroll sync page indicator
   useEffect(() => {
-    if (!pdfDoc || numPages === 0 || !viewportRef.current) return;
+    if (!pdfDoc || numPages === 0 || !viewportElementRef.current) return;
 
     const observer = new IntersectionObserver((entries) => {
       setVisiblePages((prev) => {
@@ -406,7 +424,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
         });
 
         // Determine which page is closest to the top of the viewport and mark it as the current active page
-        const container = viewportRef.current;
+        const container = viewportElementRef.current;
         if (container) {
           const placeholders = container.querySelectorAll('.pdf-page-placeholder');
           let closestPage = null;
@@ -434,25 +452,25 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
         return next;
       });
     }, {
-      root: viewportRef.current,
+      root: viewportElementRef.current,
       rootMargin: '250px 0px 250px 0px', // preload pages 250px before entering viewport for a super smooth scroll experience
       threshold: 0.1
     });
 
-    const placeholders = viewportRef.current.querySelectorAll('.pdf-page-placeholder');
+    const placeholders = viewportElementRef.current.querySelectorAll('.pdf-page-placeholder');
     placeholders.forEach(el => observer.observe(el));
 
     return () => {
       observer.disconnect();
     };
-  }, [pdfDoc, numPages, pageDimensions]);
+  }, [pdfDoc, numPages, pageDimensions, containerSize.width, containerSize.height]);
 
   // Adjust zoom scales smoothly when clicking zoom in/out buttons
   const handleZoomIn = () => {
+    const refWidth = Math.max(100, containerSize.width - 32);
     if (fitMode !== 'custom') {
       const currentWidth = pageDimensions.width;
-      const fitWidth = containerSize.width - 32;
-      setZoomScale(currentWidth / fitWidth + 0.2);
+      setZoomScale(currentWidth / refWidth + 0.2);
       setFitMode('custom');
     } else {
       setZoomScale(prev => Math.min(3.0, prev + 0.2));
@@ -460,15 +478,18 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
   };
 
   const handleZoomOut = () => {
+    const refWidth = Math.max(100, containerSize.width - 32);
     if (fitMode !== 'custom') {
       const currentWidth = pageDimensions.width;
-      const fitWidth = containerSize.width - 32;
-      setZoomScale(Math.max(0.3, currentWidth / fitWidth - 0.2));
+      setZoomScale(Math.max(0.3, currentWidth / refWidth - 0.2));
       setFitMode('custom');
     } else {
       setZoomScale(prev => Math.max(0.3, prev - 0.2));
     }
   };
+
+  const referenceWidth = Math.max(100, containerSize.width - 32);
+  const zoomPercentage = Math.round((pageDimensions.width / referenceWidth) * 100);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', position: 'relative' }}>
@@ -602,7 +623,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
                 </button>
                 
                 <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', minWidth: 38, textAlign: 'center' }}>
-                  {Math.round((pageDimensions.width / (containerSize.width - 32 || 400)) * 100)}%
+                  {zoomPercentage}%
                 </span>
 
                 <button
