@@ -272,13 +272,13 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
     else if (file) alert('Por favor, selecciona un archivo PDF válido.');
   };
 
-  // Scroll smoothly to a specific page
-  const scrollToPage = (pageNum) => {
+  // Scroll to a specific page (instantly by default to prevent intermediate page loading)
+  const scrollToPage = (pageNum, smooth = false) => {
     if (!viewportElementRef.current || !pdfDoc) return;
     const target = Math.max(1, Math.min(numPages, pageNum));
     const element = viewportElementRef.current.querySelector(`.pdf-page-placeholder[data-page-number="${target}"]`);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      element.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
       setCurrentPage(target);
       localStorage.setItem(localStorageKey, String(target));
     }
@@ -294,10 +294,10 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
       }
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        scrollToPage(currentPage - 1);
+        scrollToPage(currentPage - 1, true);
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        scrollToPage(currentPage + 1);
+        scrollToPage(currentPage + 1, true);
       }
     };
 
@@ -522,7 +522,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
       });
     }, {
       root: viewportElementRef.current,
-      rootMargin: '1600px 0px 1600px 0px', // wide preloading window (approx 1.5 - 2 pages) to ensure zero blank pages when scrolling
+      rootMargin: '1800px 0px 2400px 0px', // precise preloading window (exactly 2 pages before and 2-3 pages after)
       threshold: 0.1
     });
 
@@ -615,7 +615,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <button
                   className="glass-button"
-                  onClick={() => scrollToPage(currentPage - 1)}
+                  onClick={() => scrollToPage(currentPage - 1, true)}
                   disabled={currentPage <= 1 || isLoading}
                   style={{ padding: '0 8px', height: 26, borderRadius: 6 }}
                   title="Página Anterior (Flecha Izquierda)"
@@ -650,7 +650,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
 
                 <button
                   className="glass-button"
-                  onClick={() => scrollToPage(currentPage + 1)}
+                  onClick={() => scrollToPage(currentPage + 1, true)}
                   disabled={currentPage >= numPages || isLoading}
                   style={{ padding: '0 8px', height: 26, borderRadius: 6 }}
                   title="Página Siguiente (Flecha Derecha)"

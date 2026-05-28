@@ -139,11 +139,28 @@ body {
   cursor: not-allowed;
 }
 
+/* ===== Glassmorphism: Active Button ===== */
 .glass-button.active {
-  background: var(--accent-color);
+  background: rgba(var(--accent-color-rgb), 0.45);
   color: #ffffff;
-  border-color: transparent;
-  box-shadow: 0 0 16px rgba(var(--accent-color-rgb), 0.35);
+  border-color: rgba(var(--accent-color-rgb), 0.7);
+  box-shadow: 0 4px 16px rgba(var(--accent-color-rgb), 0.25);
+  backdrop-filter: blur(8px);
+}
+
+/* Hover effects for active button */
+.theme-light .glass-button.active:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.08) !important; /* elegant slate-grey glass hover */
+  color: var(--text-primary) !important;      /* dark text for perfect contrast */
+  border-color: var(--border-glass-glow) !important;
+  box-shadow: 0 4px 16px var(--shadow-color) !important;
+}
+
+.theme-dark .glass-button.active:hover:not(:disabled) {
+  background: rgba(var(--accent-color-rgb), 0.65) !important; /* premium glowing indigo/blue overlay */
+  color: #ffffff !important;
+  border-color: rgba(var(--accent-color-rgb), 0.85) !important;
+  box-shadow: 0 4px 20px rgba(var(--accent-color-rgb), 0.4) !important;
 }
 
 /* ===== Layout ===== */

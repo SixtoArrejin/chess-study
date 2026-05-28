@@ -317,7 +317,7 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div style={modeLabel}>
           <div style={modeDot} />
-          {isGameMode ? 'MODO JUEGO Y ANÁLISIS' : 'EDITOR DE POSICIONES'}
+          {isGameMode ? 'MODO JUEGO Y ANÁLISIS' : 'MODO LIBRE: EDITOR DE TABLERO'}
         </div>
         <button onClick={onOpenSettings}
           style={{
@@ -461,10 +461,12 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
                 fontWeight: 700,
                 letterSpacing: '0.04em',
                 justifyContent: 'center',
-                gap: 4,
+                gap: 5,
+                display: 'inline-flex',
+                alignItems: 'center',
               }}>
-              <Play style={{ width: 11, height: 11, fill: '#fff' }} />
-              <span>INICIAR JUEGO</span>
+              <Play style={{ width: 10, height: 10, fill: 'currentColor', transform: 'translateY(0.5px)' }} />
+              <span>EMPEZAR DESDE ESTA POSICIÓN</span>
             </button>
           </div>
         </div>
