@@ -14,7 +14,7 @@ import {
 /* ===== Board colour presets ===== */
 const THEME_COLORS = {
   classic:   { dark: '#769656', light: '#eeeed2' },
-  classic_bw: { dark: '#000000', light: '#ffffff' },
+  classic_bw: { dark: '#3b3b3b', light: '#ffffff' },
   ocean:     { dark: '#4b7399', light: '#eae9d2' },
   wood:      { dark: '#b58863', light: '#f0d9b5' },
   cyberpunk: { dark: '#4a1259', light: '#ff75c3' },

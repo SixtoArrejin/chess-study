@@ -3,7 +3,7 @@ import { X, Sun, Moon, LayoutGrid, Palette, RotateCcw, BookOpen } from 'lucide-r
 
 const BOARD_THEMES = [
   { id: 'classic', name: 'Esmeralda', dark: '#769656', light: '#eeeed2' },
-  { id: 'classic_bw', name: 'Clásico B&N', dark: '#000000', light: '#ffffff' },
+  { id: 'classic_bw', name: 'Clásico B&N', dark: '#3b3b3b', light: '#ffffff' },
   { id: 'ocean', name: 'Océano', dark: '#4b7399', light: '#eae9d2' },
   { id: 'wood', name: 'Madera', dark: '#b58863', light: '#f0d9b5' },
   { id: 'cyberpunk', name: 'Cyberpunk', dark: '#4a1259', light: '#ff75c3' },
