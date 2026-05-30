@@ -37,6 +37,11 @@ export default function App() {
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfReady, setPdfReady] = useState(false);
 
+  /* ========= CHESSBOARD OCR STATE ========= */
+  const [isCropping, setIsCropping] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [recognizedFen, setRecognizedFen] = useState(null);
+
   useEffect(() => {
     async function loadSavedPdf() {
       const file = await getPdfFromDB();
@@ -139,7 +144,15 @@ export default function App() {
       className="left-panel"
       style={{ width: `${leftWidthPercent}%` }}
     >
-      <ChessPanel boardTheme={boardTheme} onOpenSettings={() => setIsSettingsOpen(true)} />
+      <ChessPanel 
+        boardTheme={boardTheme} 
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        isCropping={isCropping}
+        setIsCropping={setIsCropping}
+        isProcessing={isProcessing}
+        recognizedFen={recognizedFen}
+        setRecognizedFen={setRecognizedFen}
+      />
     </div>
   );
 
@@ -149,6 +162,11 @@ export default function App() {
         <PdfPanel 
           pdfFile={pdfFile} 
           setPdfFile={handleSetPdf} 
+          isCropping={isCropping}
+          setIsCropping={setIsCropping}
+          isProcessing={isProcessing}
+          setIsProcessing={setIsProcessing}
+          onRecognizedFen={setRecognizedFen}
         />
       ) : pdfFile ? (
         <div style={{
@@ -165,6 +183,11 @@ export default function App() {
         <PdfPanel 
           pdfFile={null} 
           setPdfFile={handleSetPdf} 
+          isCropping={isCropping}
+          setIsCropping={setIsCropping}
+          isProcessing={isProcessing}
+          setIsProcessing={setIsProcessing}
+          onRecognizedFen={setRecognizedFen}
         />
       )}
     </div>

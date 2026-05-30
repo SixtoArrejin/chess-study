@@ -4,7 +4,7 @@ import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import {
   Play, Settings2, RotateCcw, Trash2, ArrowLeftRight,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  RefreshCw, AlertCircle
+  RefreshCw, AlertCircle, Scan
 } from 'lucide-react';
 import {
   positionObjectToFenPiecePlacement, fenToPositionObject,
@@ -20,7 +20,15 @@ const THEME_COLORS = {
   slate:     { dark: '#374151', light: '#e5e7eb' },
 };
 
-export default function ChessPanel({ boardTheme, onOpenSettings }) {
+export default function ChessPanel({
+  boardTheme,
+  onOpenSettings,
+  isCropping,
+  setIsCropping,
+  isProcessing,
+  recognizedFen,
+  setRecognizedFen
+}) {
   /* ===== Mode ===== */
   const [isGameMode, setIsGameMode] = useState(false);
 
@@ -37,6 +45,14 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [showTurnModal, setShowTurnModal] = useState(false);
   const [moveList, setMoveList] = useState([]);
+
+  /* ========= OCR FEN EFFECT ========= */
+  useEffect(() => {
+    if (recognizedFen) {
+      setBoardPieces(fenToPositionObject(recognizedFen));
+      setRecognizedFen(null); // Reset FEN in parent state
+    }
+  }, [recognizedFen, setRecognizedFen]);
 
   const activeColors = THEME_COLORS[boardTheme] || THEME_COLORS.classic;
 
@@ -452,9 +468,31 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
               </button>
             </div>
 
-            <button className="glass-button active" onClick={handleStartGameClick}
+            <button
+              className={`glass-button ${isCropping ? 'active' : ''}`}
+              onClick={() => setIsCropping(!isCropping)}
+              disabled={isProcessing}
               style={{
                 flex: 1,
+                height: 32,
+                padding: '0 10px',
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                justifyContent: 'center',
+                gap: 5,
+                display: 'inline-flex',
+                alignItems: 'center',
+              }}
+              title="Reconocer Posición desde PDF"
+            >
+              <Scan style={{ width: 12, height: 12 }} />
+              <span>RECONOCER POSICIÓN</span>
+            </button>
+
+            <button className="glass-button active" onClick={handleStartGameClick}
+              style={{
+                flex: 1.2,
                 height: 32,
                 padding: '0 12px',
                 fontSize: 9,

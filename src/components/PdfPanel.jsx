@@ -204,10 +204,169 @@ function PdfPage({ pdfDoc, pageNum, dimensions, renderDimensions, isVisible }) {
   );
 }
 
-export default function PdfPanel({ pdfFile, setPdfFile }) {
+export default function PdfPanel({
+  pdfFile,
+  setPdfFile,
+  isCropping,
+  setIsCropping,
+  isProcessing,
+  setIsProcessing,
+  onRecognizedFen
+}) {
   const fileInputRef = useRef(null);
   const containerRef = useRef(null);
-  
+
+  /* ========= CROPPING STATE & HANDLERS ========= */
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [cropStart, setCropStart] = useState({ x: 0, y: 0 });
+  const [cropCurrent, setCropCurrent] = useState({ x: 0, y: 0 });
+  const [cropError, setCropError] = useState(null);
+
+  const cropOverlayRef = useRef(null);
+
+  const handleCropMouseDown = (e) => {
+    if (!isCropping || isProcessing) return;
+    const rect = cropOverlayRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setIsDrawing(true);
+    setCropStart({ x, y });
+    setCropCurrent({ x, y });
+    setCropError(null);
+  };
+
+  const handleCropMouseMove = (e) => {
+    if (!isDrawing || !isCropping || isProcessing) return;
+    const rect = cropOverlayRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setCropCurrent({ x, y });
+  };
+
+  const handleCropMouseUp = async (e) => {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+
+    const rect = cropOverlayRef.current.getBoundingClientRect();
+    const clientX = e.clientX ?? e.changedTouches?.[0]?.clientX;
+    const clientY = e.clientY ?? e.changedTouches?.[0]?.clientY;
+
+    if (clientX === undefined || clientY === undefined) return;
+
+    const endX = clientX - rect.left;
+    const endY = clientY - rect.top;
+
+    const x1 = Math.min(cropStart.x, endX);
+    const y1 = Math.min(cropStart.y, endY);
+    const w = Math.abs(cropStart.x - endX);
+    const h = Math.abs(cropStart.y - endY);
+
+    // Cancel tiny selection clicks
+    if (w < 15 || h < 15) {
+      return;
+    }
+
+    // Convert coordinates to viewport relative to map pages
+    const viewport = viewportElementRef.current;
+    if (!viewport) return;
+
+    setIsProcessing(true);
+    try {
+      const viewportRect = viewport.getBoundingClientRect();
+      const screenLeft = viewportRect.left + x1;
+      const screenTop = viewportRect.top + y1;
+      const screenRight = screenLeft + w;
+      const screenBottom = screenTop + h;
+
+      const placeholders = viewport.querySelectorAll('.pdf-page-placeholder');
+      let bestPage = null;
+      let maxOverlap = 0;
+
+      placeholders.forEach((placeholder) => {
+        const pageRect = placeholder.getBoundingClientRect();
+        const oLeft = Math.max(screenLeft, pageRect.left);
+        const oTop = Math.max(screenTop, pageRect.top);
+        const oRight = Math.min(screenRight, pageRect.right);
+        const oBottom = Math.min(screenBottom, pageRect.bottom);
+
+        const oW = Math.max(0, oRight - oLeft);
+        const oH = Math.max(0, oBottom - oTop);
+        const oArea = oW * oH;
+
+        if (oArea > maxOverlap) {
+          maxOverlap = oArea;
+          bestPage = placeholder;
+        }
+      });
+
+      if (!bestPage) {
+        throw new Error('No se pudo identificar en qué página del PDF se dibujó la selección.');
+      }
+
+      const canvas = bestPage.querySelector('canvas');
+      if (!canvas) {
+        throw new Error('La página seleccionada no está completamente renderizada.');
+      }
+
+      const pageRect = bestPage.getBoundingClientRect();
+      const relativeX = Math.max(0, screenLeft - pageRect.left);
+      const relativeY = Math.max(0, screenTop - pageRect.top);
+      const relativeW = Math.min(screenRight - screenLeft, pageRect.right - Math.max(screenLeft, pageRect.left));
+      const relativeH = Math.min(screenBottom - screenTop, pageRect.bottom - Math.max(screenTop, pageRect.top));
+
+      const scaleX = canvas.width / pageRect.width;
+      const scaleY = canvas.height / pageRect.height;
+
+      const canvasX = relativeX * scaleX;
+      const canvasY = relativeY * scaleY;
+      const canvasW = relativeW * scaleX;
+      const canvasH = relativeH * scaleY;
+
+      // Crop
+      const croppedCanvas = document.createElement('canvas');
+      croppedCanvas.width = canvasW;
+      croppedCanvas.height = canvasH;
+      const ctx = croppedCanvas.getContext('2d');
+      ctx.drawImage(canvas, canvasX, canvasY, canvasW, canvasH, 0, 0, canvasW, canvasH);
+
+      // Call TF.js prediction
+      const { recognizeBoard } = await import('../helpers/tfService');
+      const fen = await recognizeBoard(croppedCanvas);
+
+      // Success
+      onRecognizedFen(fen);
+      setIsCropping(false);
+    } catch (err) {
+      console.error(err);
+      setCropError(err.message || 'Error al procesar el tablero.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCropTouchStart = (e) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    handleCropMouseDown({
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      preventDefault: () => e.preventDefault(),
+    });
+  };
+
+  const handleCropTouchMove = (e) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    handleCropMouseMove({
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      preventDefault: () => e.preventDefault(),
+    });
+  };
+
+  const handleCropTouchEnd = (e) => {
+    handleCropMouseUp(e);
+  };
   // Callback ref mechanism to attach ResizeObserver reliably even on conditional mounts
   const resizeObserverRef = useRef(null);
   const viewportElementRef = useRef(null);
@@ -598,11 +757,13 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
         {pdfFile ? (
           <div style={{
             width: '100%', height: '100%', borderRadius: 10, overflow: 'hidden',
-            border: '1px solid var(--border-glass)',
+            border: isCropping ? '2px solid var(--accent-color)' : '1px solid var(--border-glass)',
+            boxShadow: isCropping ? '0 0 15px rgba(var(--accent-color-rgb), 0.25)' : 'none',
             position: 'relative',
             display: 'flex',
             flexDirection: 'column',
             background: 'var(--bg-glass)',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
           }}>
             {/* Toolbar */}
             <div style={{
@@ -704,52 +865,166 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
               </div>
             </div>
 
-            {/* Canvas Scrollable Viewport */}
-            <div
-              ref={viewportRef}
-              style={{
-                flex: 1,
-                overflow: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                background: 'rgba(0, 0, 0, 0.15)',
-                padding: 16,
-                position: 'relative',
-              }}
-            >
-              {isLoading && (
-                <div style={{
-                  position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                  background: 'rgba(0, 0, 0, 0.35)', display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center', gap: 10, zIndex: 10,
-                  backdropFilter: 'blur(3px)',
-                }}>
-                  <div className="pulse-glow" style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--accent-color)' }} />
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    Cargando libro...
-                  </span>
+            {/* Viewport Wrapper */}
+            <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              {/* Canvas Scrollable Viewport */}
+              <div
+                ref={viewportRef}
+                style={{
+                  flex: 1,
+                  overflow: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  background: 'rgba(0, 0, 0, 0.15)',
+                  padding: 16,
+                  position: 'relative',
+                }}
+              >
+                {isLoading && (
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.35)', display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: 10, zIndex: 10,
+                    backdropFilter: 'blur(3px)',
+                  }}>
+                    <div className="pulse-glow" style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--accent-color)' }} />
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      Cargando libro...
+                    </span>
+                  </div>
+                )}
+
+                {loadError ? (
+                  <div style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    padding: 32, textAlign: 'center', color: 'var(--danger-color)', gap: 12
+                  }}>
+                    <p style={{ fontSize: 12, fontWeight: 600 }}>{loadError}</p>
+                  </div>
+                ) : (
+                  pdfDoc && Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
+                    <PdfPage
+                      key={pageNum}
+                      pdfDoc={pdfDoc}
+                      pageNum={pageNum}
+                      dimensions={pageDimensions}
+                      renderDimensions={debouncedDimensions}
+                      isVisible={visiblePages.has(pageNum)}
+                    />
+                  ))
+                )}
+              </div>
+
+              {/* Cropping Selection Layer Overlay */}
+              {isCropping && (
+                <div
+                  ref={cropOverlayRef}
+                  onMouseDown={handleCropMouseDown}
+                  onMouseMove={handleCropMouseMove}
+                  onMouseUp={handleCropMouseUp}
+                  onTouchStart={handleCropTouchStart}
+                  onTouchMove={handleCropTouchMove}
+                  onTouchEnd={handleCropTouchEnd}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 200,
+                    cursor: 'crosshair',
+                    background: 'rgba(0, 0, 0, 0.25)',
+                    userSelect: 'none',
+                  }}
+                >
+                  {/* Floating instructions banner */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 14,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'var(--bg-glass-active)',
+                    border: '1px solid var(--border-glass-glow)',
+                    padding: '8px 16px',
+                    borderRadius: 12,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: '0.04em',
+                    color: 'var(--text-primary)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                    zIndex: 210,
+                    whiteSpace: 'nowrap',
+                    textTransform: 'uppercase',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}>
+                    <div className="pulse-glow" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent-color)' }} />
+                    <span>Dibuja un cuadrado en el PDF sobre el diagrama de ajedrez</span>
+                  </div>
+
+                  {/* Draw box outline in real-time */}
+                  {isDrawing && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: Math.min(cropStart.x, cropCurrent.x),
+                        top: Math.min(cropStart.y, cropCurrent.y),
+                        width: Math.abs(cropStart.x - cropCurrent.x),
+                        height: Math.abs(cropStart.y - cropCurrent.y),
+                        border: '2px dashed var(--accent-color)',
+                        background: 'rgba(var(--accent-color-rgb), 0.15)',
+                        boxShadow: '0 0 12px rgba(var(--accent-color-rgb), 0.4)',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  )}
+
+                  {/* Error dialog inside overlay */}
+                  {cropError && (
+                    <div className="glass-panel animate-fade-in" style={{
+                      position: 'absolute',
+                      top: '40%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      padding: 16,
+                      maxWidth: 320,
+                      textAlign: 'center',
+                      zIndex: 220,
+                    }}>
+                      <p style={{ fontSize: 11, color: 'var(--danger-color)', fontWeight: 600, marginBottom: 12 }}>{cropError}</p>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
+                        <button className="glass-button" onClick={() => setCropError(null)} style={{ padding: '6px 12px', fontSize: 10 }}>Intentar de nuevo</button>
+                        <button className="glass-button" onClick={() => setIsCropping(false)} style={{ padding: '6px 12px', fontSize: 10, color: 'var(--text-muted)' }}>Cancelar</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {loadError ? (
+              {/* Loader overlay during model inference */}
+              {isProcessing && (
                 <div style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  padding: 32, textAlign: 'center', color: 'var(--danger-color)', gap: 12
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(0, 0, 0, 0.45)',
+                  backdropFilter: 'blur(6px)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12,
+                  zIndex: 300,
                 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600 }}>{loadError}</p>
+                  <div className="pulse-glow" style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--accent-color)' }} />
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                    Reconociendo piezas con TensorFlow.js...
+                  </span>
+                  <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)' }}>
+                    Procesando 64 casillas en paralelo
+                  </span>
                 </div>
-              ) : (
-                pdfDoc && Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
-                  <PdfPage
-                    key={pageNum}
-                    pdfDoc={pdfDoc}
-                    pageNum={pageNum}
-                    dimensions={pageDimensions}
-                    renderDimensions={debouncedDimensions}
-                    isVisible={visiblePages.has(pageNum)}
-                  />
-                ))
               )}
             </div>
           </div>
