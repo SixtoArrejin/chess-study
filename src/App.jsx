@@ -282,7 +282,7 @@ export default function App() {
           }}
         >
           {/* Left Group: Book info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflow: 'hidden', marginRight: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflow: 'hidden', marginRight: 12, flex: 1, minWidth: 0 }}>
             <BookOpen style={{ width: 15, height: 15, color: 'var(--accent-color)', flexShrink: 0 }} />
             <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', flexShrink: 0 }}>
               Libro:
@@ -296,7 +296,8 @@ export default function App() {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  maxWidth: 'min(240px, calc(100% - 100px))',
+                  flex: 1,
+                  minWidth: 0,
                 }}
                 title={pdfFile.name}
               >

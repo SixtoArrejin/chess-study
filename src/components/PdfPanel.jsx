@@ -1,219 +1,14 @@
 import React, { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import { Upload, FileText, ChevronLeft, ChevronRight, Plus, Minus, MoveHorizontal } from 'lucide-react';
 
-// Safe, race-free dynamic script loader for PDF.js CDN
-let pdfjsLoadingPromise = null;
-function loadPdfJS() {
-  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
-  if (pdfjsLoadingPromise) return pdfjsLoadingPromise;
-
-  pdfjsLoadingPromise = new Promise((resolve, reject) => {
-    // Inject PDF.js stylesheet for text selection support
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css';
-    document.head.appendChild(link);
-
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    script.onload = () => {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      resolve(window.pdfjsLib);
-    };
-    script.onerror = (err) => {
-      pdfjsLoadingPromise = null;
-      reject(err);
-    };
-    document.body.appendChild(script);
-  });
-  return pdfjsLoadingPromise;
-}
-
-// Sub-component to render a single PDF page on demand (lazy loading) with canvas and Text Layer for text selection
-function PdfPage({ pdfDoc, pageNum, dimensions, renderDimensions, isVisible }) {
-  const canvasRef = useRef(null);
-  const textLayerRef = useRef(null);
-  const renderTaskRef = useRef(null);
-  const [isRendered, setIsRendered] = useState(false);
-  
-  // Local aspect ratio to support varying page dimensions (very common in scanned books like Grau)
-  const defaultRatio = dimensions?.height && dimensions?.width ? dimensions.height / dimensions.width : 1.414;
-  const [pageRatio, setPageRatio] = useState(defaultRatio);
-
-  useEffect(() => {
-    if (!pdfDoc) return;
-    let active = true;
-    pdfDoc.getPage(pageNum).then((page) => {
-      if (!active) return;
-      const viewport = page.getViewport({ scale: 1 });
-      setPageRatio(viewport.height / viewport.width);
-    }).catch(err => console.error(err));
-    return () => { active = false; };
-  }, [pdfDoc, pageNum]);
-
-  const localWidth = Math.floor(dimensions?.width || 450);
-  const localHeight = Math.floor(localWidth * (pageRatio || 1.414));
-
-  // Use primitive render width to trigger redraws instead of object reference changes
-  const renderWidth = renderDimensions?.width ? Math.floor(renderDimensions.width) : 0;
-
-  useEffect(() => {
-    if (!isVisible || !pdfDoc || !renderWidth) {
-      setIsRendered(false);
-      return;
-    }
-
-    let active = true;
-
-    async function drawPage() {
-      try {
-        const page = await pdfDoc.getPage(pageNum);
-        if (!active || !canvasRef.current || !textLayerRef.current) return;
-
-        const canvas = canvasRef.current;
-        const textLayerDiv = textLayerRef.current;
-        const context = canvas.getContext('2d');
-
-        if (renderTaskRef.current) {
-          renderTaskRef.current.cancel();
-        }
-
-        const dpr = window.devicePixelRatio || 1;
-        const originalViewport = page.getViewport({ scale: 1 });
-        
-        // Strict rounded integer dimensions matching physical pixels to ensure razor-sharp HD quality
-        const roundedWidth = renderWidth;
-        const roundedHeight = Math.floor(roundedWidth * pageRatio);
-        
-        canvas.width = Math.floor(roundedWidth * dpr);
-        canvas.height = Math.floor(roundedHeight * dpr);
-
-        const canvasViewport = page.getViewport({ scale: canvas.width / originalViewport.width });
-
-        const renderContext = {
-          canvasContext: context,
-          viewport: canvasViewport
-        };
-
-        const renderTask = page.render(renderContext);
-        renderTaskRef.current = renderTask;
-
-        await renderTask.promise;
-        
-        if (!active || !canvasRef.current || !textLayerRef.current) return;
-        
-        // 2. CSS-aligned Text Layer (CSS pixels) using debounced dimensions
-        const textViewport = page.getViewport({ scale: roundedWidth / originalViewport.width });
-        textLayerDiv.innerHTML = '';
-        textLayerDiv.style.width = `${textViewport.width}px`;
-        textLayerDiv.style.height = `${textViewport.height}px`;
-        
-        // Critically important: Set scale-factor CSS variable so the PDF.js stylesheet 
-        // scales the text overlay divs exactly to match the canvas words
-        textLayerDiv.style.setProperty('--scale-factor', String(textViewport.scale));
-
-        const textContent = await page.getTextContent();
-        
-        if (!active || !textLayerRef.current) return;
-
-        window.pdfjsLib.renderTextLayer({
-          textContentSource: textContent,
-          container: textLayerDiv,
-          viewport: textViewport,
-          textDivs: []
-        });
-
-        setIsRendered(true);
-      } catch (err) {
-        if (err.name !== 'RenderingCancelledException') {
-          console.error(`Error rendering page ${pageNum}:`, err);
-        }
-      }
-    }
-
-    drawPage();
-
-    return () => {
-      active = false;
-      if (renderTaskRef.current) {
-        renderTaskRef.current.cancel();
-      }
-    };
-  }, [pdfDoc, pageNum, renderWidth, isVisible, pageRatio]);
-
-  return (
-    <div
-      className="pdf-page-placeholder"
-      data-page-number={pageNum}
-      style={{
-        width: localWidth,
-        height: localHeight,
-        position: 'relative',
-        marginBottom: 20,
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
-        borderRadius: 4,
-        background: '#ffffff',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexShrink: 0,
-        overflow: 'hidden', // prevents page bleeding and gluing issues
-      }}
-    >
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          borderRadius: 4,
-          display: isRendered ? 'block' : 'none',
-          // Force immediate dimensions for CSS stretching! This guarantees 60fps fluid resizes with zero flicker.
-          width: `${localWidth}px`,
-          height: `${localHeight}px`,
-        }}
-      />
-      
-      {/* Interactive Text Selection Layer overlay */}
-      <div
-        ref={textLayerRef}
-        className="textLayer"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          borderRadius: 4,
-          zIndex: 2,
-          pointerEvents: 'auto',
-          // Stretch the text overlay in synchrony with the canvas
-          width: `${localWidth}px`,
-          height: `${localHeight}px`,
-        }}
-      />
-
-      {!isRendered && (
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-          color: 'var(--text-muted)'
-        }}>
-          <div className="pulse-glow" style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--accent-color)' }} />
-          <span style={{ fontSize: 9, fontWeight: 600 }}>Cargando página {pageNum}...</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function PdfPanel({ pdfFile, setPdfFile }) {
   const fileInputRef = useRef(null);
-  const containerRef = useRef(null);
-  
-  // Callback ref mechanism to attach ResizeObserver reliably even on conditional mounts
-  const resizeObserverRef = useRef(null);
-  const viewportElementRef = useRef(null);
+  const iframeRef = useRef(null);
+  const pdfUrlRef = useRef(null);
+  const checkAppIntervalRef = useRef(null);
 
   const [isDragOver, setIsDragOver] = useState(false);
-  const [pdfDoc, setPdfDoc] = useState(null);
+  const [pdfViewerApp, setPdfViewerApp] = useState(null);
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [tempPageInput, setTempPageInput] = useState('1');
@@ -225,45 +20,10 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState(null);
 
-  // Track the size of the panel dynamically using ResizeObserver
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [pageAspectRatio, setPageAspectRatio] = useState(0.707); // standard A4 ratio fallback
-  const [visiblePages, setVisiblePages] = useState(new Set([1]));
-
   const localStorageKey = useMemo(() => {
     if (!pdfFile) return '';
     return `chess_study_last_page_${pdfFile.name}_${pdfFile.size}`;
   }, [pdfFile]);
-
-  const viewportRef = useCallback((node) => {
-    if (resizeObserverRef.current) {
-      resizeObserverRef.current.disconnect();
-      resizeObserverRef.current = null;
-    }
-
-    if (node !== null) {
-      viewportElementRef.current = node;
-      
-      // Set initial dimensions immediately so there's no layout delay
-      setContainerSize({
-        width: node.clientWidth,
-        height: node.clientHeight
-      });
-
-      const observer = new ResizeObserver((entries) => {
-        if (!entries || !entries.length) return;
-        const entry = entries[0];
-        setContainerSize({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height
-        });
-      });
-      observer.observe(node);
-      resizeObserverRef.current = observer;
-    } else {
-      viewportElementRef.current = null;
-    }
-  }, []);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -280,21 +40,18 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
     else if (file) alert('Por favor, selecciona un archivo PDF válido.');
   };
 
-  // Scroll to a specific page (instantly by default to prevent intermediate page loading)
-  const scrollToPage = (pageNum, smooth = false) => {
-    if (!viewportElementRef.current || !pdfDoc) return;
+  // Scroll to a specific page
+  const scrollToPage = (pageNum) => {
+    if (!pdfViewerApp) return;
     const target = Math.max(1, Math.min(numPages, pageNum));
-    const element = viewportElementRef.current.querySelector(`.pdf-page-placeholder[data-page-number="${target}"]`);
-    if (element) {
-      element.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
-      setCurrentPage(target);
-      localStorage.setItem(localStorageKey, String(target));
-    }
+    pdfViewerApp.page = target;
+    setCurrentPage(target);
+    localStorage.setItem(localStorageKey, String(target));
   };
 
   // Handle keyboard page flipping (ArrowLeft & ArrowRight)
   useEffect(() => {
-    if (!pdfDoc) return;
+    if (!pdfViewerApp || numPages === 0) return;
 
     const handleKeyDown = (e) => {
       if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
@@ -302,16 +59,16 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
       }
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        scrollToPage(currentPage - 1, true);
+        scrollToPage(currentPage - 1);
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        scrollToPage(currentPage + 1, true);
+        scrollToPage(currentPage + 1);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pdfDoc, currentPage, numPages, localStorageKey]);
+  }, [pdfViewerApp, currentPage, numPages, localStorageKey]);
 
   // Sync temp input box with page scrolling
   useEffect(() => {
@@ -333,265 +90,179 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
     }
   };
 
-  // Bootstrap PDFJS script loading & open IndexedDB PDF file
-  useEffect(() => {
-    if (!pdfFile) {
-      setPdfDoc(null);
-      setNumPages(0);
-      return;
+  // Helper to apply zoom & fit settings to PDF.js
+  const applyZoomAndFit = useCallback((app, mode, scale) => {
+    if (!app || !app.pdfViewer) return;
+    const currentVal = app.pdfViewer.currentScaleValue;
+    if (mode === 'width') {
+      if (currentVal !== 'page-width') {
+        app.pdfViewer.currentScaleValue = 'page-width';
+      }
+    } else if (mode === 'height') {
+      if (currentVal !== 'page-fit') {
+        app.pdfViewer.currentScaleValue = 'page-fit';
+      }
+    } else {
+      const currentScale = app.pdfViewer.currentScale;
+      // Prevent feedback loops: only set if scale differs substantially and is not already active
+      if (Math.abs(currentScale - scale) > 0.01 && currentVal !== String(scale)) {
+        app.pdfViewer.currentScaleValue = String(scale);
+      }
     }
+  }, []);
 
-    let active = true;
+  // Open the PDF File inside the PDF.js Web Viewer
+  const openFileInViewer = useCallback(async (app, file) => {
     setIsLoading(true);
     setLoadError(null);
-
-    loadPdfJS().then((pdfjs) => {
-      if (!active) return;
-
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        if (!active) return;
-        try {
-          const typedarray = new Uint8Array(e.target.result);
-          const loadingTask = pdfjs.getDocument({
-            data: typedarray,
-            cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
-            cMapPacked: true,
-          });
-          const doc = await loadingTask.promise;
-          if (!active) return;
-
-          setPdfDoc(doc);
-          setNumPages(doc.numPages);
-
-          // Find the true aspect ratio of the first page to size our lazy loading divs correctly
-          const pageOne = await doc.getPage(1);
-          const viewportOne = pageOne.getViewport({ scale: 1 });
-          setPageAspectRatio(viewportOne.width / viewportOne.height);
-
-          setIsLoading(false);
-        } catch (err) {
-          console.error('Error loading PDF document:', err);
-          if (active) {
-            setLoadError('Error al procesar el PDF. Asegúrate de que es un archivo válido.');
-            setIsLoading(false);
-          }
-        }
-      };
-      reader.onerror = () => {
-        if (active) {
-          setLoadError('Error al leer el archivo PDF.');
-          setIsLoading(false);
-        }
-      };
-      reader.readAsArrayBuffer(pdfFile);
-    }).catch((err) => {
-      console.error('Error loading PDFJS script:', err);
-      if (active) {
-        setLoadError('Error al cargar el motor de visualización PDF.');
-        setIsLoading(false);
+    try {
+      if (pdfUrlRef.current) {
+        URL.revokeObjectURL(pdfUrlRef.current);
       }
-    });
+      const objectUrl = URL.createObjectURL(file);
+      pdfUrlRef.current = objectUrl;
+      
+      // Load file into PDFViewerApplication
+      await app.open({ url: objectUrl });
+    } catch (err) {
+      console.error('Error opening PDF inside iframe:', err);
+      setLoadError('Error al procesar el archivo PDF.');
+      setIsLoading(false);
+    }
+  }, []);
 
-    return () => {
-      active = false;
-    };
-  }, [pdfFile]);
-
-  // One-time restore scroll position on reload/load
+  // Monitor pdfFile state changes to open or close the document
   useEffect(() => {
-    if (pdfDoc && numPages > 0) {
-      const timer = setTimeout(() => {
-        const savedPage = localStorage.getItem(localStorageKey);
-        if (savedPage) {
-          const parsed = parseInt(savedPage, 10);
-          if (parsed >= 1 && parsed <= numPages) {
-            scrollToPage(parsed);
-          }
-        }
-      }, 250);
-      return () => clearTimeout(timer);
-    }
-  }, [pdfDoc, numPages, localStorageKey]);
+    if (!pdfViewerApp) return;
 
-  // Calculate dynamic dimensions for pages based on container size, fit mode, and zoom level
-  const pageDimensions = useMemo(() => {
-    if (containerSize.width === 0 || containerSize.height === 0) {
-      return { width: 450, height: 450 / pageAspectRatio };
-    }
-
-    let width = 0;
-    let height = 0;
-
-    if (fitMode === 'height') {
-      height = containerSize.height - 32; // Fit vertically
-      width = height * pageAspectRatio;
-    } else if (fitMode === 'width') {
-      width = containerSize.width - 32; // Fit horizontally
-      height = width / pageAspectRatio;
+    if (pdfFile) {
+      openFileInViewer(pdfViewerApp, pdfFile);
     } else {
-      // Custom zoom scale relative to fit width
-      width = (containerSize.width - 32) * zoomScale;
-      height = width / pageAspectRatio;
-    }
-
-    return { width, height };
-  }, [containerSize, pageAspectRatio, fitMode, zoomScale]);
-
-  // Debounce page dimensions during active window/pane resizing to avoid canvas redraw flickers
-  const [debouncedDimensions, setDebouncedDimensions] = useState(pageDimensions);
-  useEffect(() => {
-    // ALWAYS debounce during active changes (splitter dragging and window resizing)
-    // This allows hardware-accelerated CSS stretching to handle the 60fps scaling fluidly
-    // and only triggers a high-quality PDF page canvas redraw 200ms after the resizing stops!
-    const handler = setTimeout(() => {
-      setDebouncedDimensions(pageDimensions);
-    }, 200);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [pageDimensions]);
-
-  // Sync ref to currentPage to prevent exhaustive-deps warn and ensure fresh reading value inside resize scroll effect
-  const currentPageRef = useRef(currentPage);
-  useEffect(() => {
-    currentPageRef.current = currentPage;
-  }, [currentPage]);
-
-  // Keep the current active page centered/top-aligned when the container is resized (both split drags and window resizes)
-  const lastSizeRef = useRef({ width: 0, height: 0 });
-  useEffect(() => {
-    if (!pdfDoc || numPages === 0 || !viewportElementRef.current) return;
-    
-    // Only scroll if this is an actual resize or fit/zoom layout adjustment
-    if (lastSizeRef.current.width !== 0 && lastSizeRef.current.height !== 0) {
-      const element = viewportElementRef.current.querySelector(`.pdf-page-placeholder[data-page-number="${currentPageRef.current}"]`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'auto', block: 'start' });
+      pdfViewerApp.close();
+      setNumPages(0);
+      setCurrentPage(1);
+      if (pdfUrlRef.current) {
+        URL.revokeObjectURL(pdfUrlRef.current);
+        pdfUrlRef.current = null;
       }
     }
-    
-    lastSizeRef.current = { width: containerSize.width, height: containerSize.height };
-  }, [containerSize.width, containerSize.height, fitMode, zoomScale, pdfDoc, numPages]);
+  }, [pdfFile, pdfViewerApp, openFileInViewer]);
 
-  // High performance IntersectionObserver to track visible pages and update scroll sync page indicator
+  // Apply zoom and fit when states change in React
   useEffect(() => {
-    if (!pdfDoc || numPages === 0 || !viewportElementRef.current) return;
+    if (!pdfViewerApp) return;
+    applyZoomAndFit(pdfViewerApp, fitMode, zoomScale);
+  }, [fitMode, zoomScale, pdfViewerApp, applyZoomAndFit]);
 
-    const observer = new IntersectionObserver((entries) => {
-      setVisiblePages((prev) => {
-        // Skip state updates completely if the resizer divider is actively being dragged
-        const isResizing = document.querySelector('.app-layout')?.classList.contains('is-resizing');
-        if (isResizing) {
-          return prev;
-        }
+  // Sync overflow-x styling based on fitMode to prevent horizontal scrollbars on fit-width, but allow it on zoom
+  useEffect(() => {
+    if (!iframeRef.current || !pdfViewerApp) return;
+    const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
+    if (!iframeDoc) return;
+    const viewerContainer = iframeDoc.getElementById('viewerContainer');
+    if (!viewerContainer) return;
+    
+    if (fitMode === 'width') {
+      viewerContainer.style.setProperty('overflow-x', 'hidden', 'important');
+    } else {
+      viewerContainer.style.setProperty('overflow-x', 'auto', 'important');
+    }
+  }, [fitMode, pdfViewerApp]);
 
-        const next = new Set(prev);
-        entries.forEach((entry) => {
-          const pageNum = parseInt(entry.target.getAttribute('data-page-number'), 10);
-          if (entry.isIntersecting) {
-            next.add(pageNum);
-          } else {
-            next.delete(pageNum);
-          }
-        });
+  // Clean up Object URL and Interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pdfUrlRef.current) {
+        URL.revokeObjectURL(pdfUrlRef.current);
+      }
+      if (checkAppIntervalRef.current) {
+        clearInterval(checkAppIntervalRef.current);
+      }
+    };
+  }, []);
 
-        // Determine which page is closest to the top of the viewport and mark it as the current active page
-        const container = viewportElementRef.current;
-        if (container) {
-          const placeholders = container.querySelectorAll('.pdf-page-placeholder');
-          let closestPage = null;
-          let closestDist = Infinity;
+  // Callback to initialize iframe communication
+  const handleIframeLoad = () => {
+    if (!iframeRef.current) return;
+    const iframeWindow = iframeRef.current.contentWindow;
+    if (!iframeWindow) return;
 
-          placeholders.forEach((placeholder) => {
-            const pageNum = parseInt(placeholder.getAttribute('data-page-number'), 10);
-            if (next.has(pageNum)) {
-              const rect = placeholder.getBoundingClientRect();
-              const containerRect = container.getBoundingClientRect();
-              const dist = Math.abs(rect.top - containerRect.top);
-              if (dist < closestDist) {
-                closestDist = dist;
-                closestPage = pageNum;
-              }
+    if (checkAppIntervalRef.current) {
+      clearInterval(checkAppIntervalRef.current);
+    }
+
+    // Wait for the PDFViewerApplication to exist and be ready
+    checkAppIntervalRef.current = setInterval(() => {
+      const app = iframeWindow.PDFViewerApplication;
+      if (app && app.initializedPromise) {
+        clearInterval(checkAppIntervalRef.current);
+        checkAppIntervalRef.current = null;
+
+        app.initializedPromise.then(() => {
+          setPdfViewerApp(app);
+
+          // Configure EventBus listeners for page changes and initialization
+          app.eventBus.on('pagechanging', (e) => {
+            setCurrentPage(e.pageNumber);
+            localStorage.setItem(localStorageKey, String(e.pageNumber));
+          });
+
+          app.eventBus.on('scalechanging', (e) => {
+            setZoomScale(e.scale);
+            const val = app.pdfViewer.currentScaleValue;
+            if (val === 'page-width') {
+              setFitMode('width');
+            } else if (val === 'page-fit') {
+              setFitMode('height');
+            } else {
+              setFitMode('custom');
             }
           });
 
-          if (closestPage && closestPage !== currentPage) {
-            setCurrentPage(closestPage);
-            localStorage.setItem(localStorageKey, String(closestPage));
+          const onPagesInit = () => {
+            setNumPages(app.pagesCount);
+            
+            // Restore last viewed page from localStorage
+            const savedPage = localStorage.getItem(localStorageKey);
+            if (savedPage) {
+              const parsed = parseInt(savedPage, 10);
+              if (parsed >= 1 && parsed <= app.pagesCount) {
+                app.page = parsed;
+                setCurrentPage(parsed);
+              }
+            }
+
+            // Apply starting Zoom & Fit settings
+            applyZoomAndFit(app, fitMode, zoomScale);
+            setIsLoading(false);
+          };
+
+          app.eventBus.on('pagesinit', onPagesInit);
+          app.eventBus.on('pagesloaded', onPagesInit);
+
+          // Trigger loading if file is already ready
+          if (pdfFile) {
+            openFileInViewer(app, pdfFile);
           }
-        }
+        });
+      }
+    }, 50);
+  };
 
-        return next;
-      });
-    }, {
-      root: viewportElementRef.current,
-      rootMargin: '1800px 0px 2400px 0px', // precise preloading window (exactly 2 pages before and 2-3 pages after)
-      threshold: 0.1
-    });
-
-    const placeholders = viewportElementRef.current.querySelectorAll('.pdf-page-placeholder');
-    placeholders.forEach(el => observer.observe(el));
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [pdfDoc, numPages, pageDimensions, containerSize.width, containerSize.height, currentPage, localStorageKey]);
-
-  // Adjust zoom scales smoothly when clicking zoom in/out buttons
   const handleZoomIn = () => {
-    const refWidth = Math.max(100, containerSize.width - 32);
-    if (fitMode !== 'custom') {
-      const currentWidth = pageDimensions.width;
-      setZoomScale(currentWidth / refWidth + 0.2);
-      setFitMode('custom');
-    } else {
-      setZoomScale(prev => Math.min(3.0, prev + 0.2));
-    }
+    setFitMode('custom');
+    setZoomScale(prev => Math.min(3.0, prev + 0.1));
   };
 
   const handleZoomOut = () => {
-    const refWidth = Math.max(100, containerSize.width - 32);
-    if (fitMode !== 'custom') {
-      const currentWidth = pageDimensions.width;
-      setZoomScale(Math.max(0.3, currentWidth / refWidth - 0.2));
-      setFitMode('custom');
-    } else {
-      setZoomScale(prev => Math.max(0.3, prev - 0.2));
-    }
+    setFitMode('custom');
+    setZoomScale(prev => Math.max(0.3, prev - 0.1));
   };
 
-  const referenceWidth = Math.max(100, containerSize.width - 32);
-  const zoomPercentage = Math.round((pageDimensions.width / referenceWidth) * 100);
+  const zoomPercentage = Math.round(zoomScale * 100);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', position: 'relative' }}>
-      {/* Custom styled CSS overlay to style text layers and selection highlight color to match the HSL glass theme */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        .textLayer {
-          position: absolute;
-          left: 0;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          overflow: hidden;
-          opacity: 1;
-          line-height: 1.0;
-        }
-        .textLayer > span {
-          color: transparent;
-          position: absolute;
-          white-space: pre;
-          cursor: text;
-          transform-origin: 0% 0%;
-        }
-        .textLayer ::selection {
-          background: rgba(var(--accent-color-rgb), 0.35) !important;
-          color: transparent;
-        }
-      ` }} />
-
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="application/pdf" style={{ display: 'none' }} />
 
       <div style={{ flex: 1, padding: 10, overflow: 'hidden', display: 'flex' }}>
@@ -620,7 +291,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <button
                   className="glass-button"
-                  onClick={() => scrollToPage(currentPage - 1, true)}
+                  onClick={() => scrollToPage(currentPage - 1)}
                   disabled={currentPage <= 1 || isLoading}
                   style={{ padding: '0 8px', height: 26, borderRadius: 6 }}
                   title="Página Anterior (Flecha Izquierda)"
@@ -655,7 +326,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
 
                 <button
                   className="glass-button"
-                  onClick={() => scrollToPage(currentPage + 1, true)}
+                  onClick={() => scrollToPage(currentPage + 1)}
                   disabled={currentPage >= numPages || isLoading}
                   style={{ padding: '0 8px', height: 26, borderRadius: 6 }}
                   title="Página Siguiente (Flecha Derecha)"
@@ -670,7 +341,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
                   className={`glass-button ${fitMode === 'width' ? 'active-outline' : ''}`}
                   onClick={() => setFitMode('width')}
                   style={{ padding: '0 8px', height: 26, borderRadius: 6 }}
-                  title="Ajustar al Ancho (Restaurar ajuste automático)"
+                  title="Ajustar al Ancho"
                 >
                   <MoveHorizontal style={{ width: 14, height: 14 }} />
                 </button>
@@ -704,17 +375,12 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
               </div>
             </div>
 
-            {/* Canvas Scrollable Viewport */}
+            {/* High Performance PDF.js Iframe Viewport */}
             <div
-              ref={viewportRef}
               style={{
                 flex: 1,
-                overflow: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
+                overflow: 'hidden',
                 background: 'rgba(0, 0, 0, 0.15)',
-                padding: 16,
                 position: 'relative',
               }}
             >
@@ -735,21 +401,23 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
               {loadError ? (
                 <div style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  padding: 32, textAlign: 'center', color: 'var(--danger-color)', gap: 12
+                  padding: 32, textAlign: 'center', color: 'var(--danger-color)', gap: 12, height: '100%'
                 }}>
                   <p style={{ fontSize: 12, fontWeight: 600 }}>{loadError}</p>
                 </div>
               ) : (
-                pdfDoc && Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
-                  <PdfPage
-                    key={pageNum}
-                    pdfDoc={pdfDoc}
-                    pageNum={pageNum}
-                    dimensions={pageDimensions}
-                    renderDimensions={debouncedDimensions}
-                    isVisible={visiblePages.has(pageNum)}
-                  />
-                ))
+                <iframe
+                  ref={iframeRef}
+                  src="/pdfjs/web/viewer.html"
+                  onLoad={handleIframeLoad}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    background: 'transparent',
+                  }}
+                  title="Visualizador PDF"
+                />
               )}
             </div>
           </div>
