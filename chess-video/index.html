@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Chess Study - Presentación de Producto</title>
+    <script src="gsap.min.js"></script>
+    <!-- Fonts: Using system fallbacks for sandboxed rendering -->
+    <style>
+      /* ===== DESIGN SYSTEM ===== */
+      :root {
+        /* Real app palette — Light theme */
+        --bg-app: hsl(220, 20%, 95%);
+        --bg-glass: rgba(255, 255, 255, 0.72);
+        --border-glass: rgba(0, 0, 0, 0.08);
+        --text-primary: hsl(222, 47%, 12%);
+        --text-secondary: hsl(215, 25%, 35%);
+        --text-muted: hsl(215, 20%, 38%);
+        --accent-color: hsl(224, 76%, 40%);
+        --accent-glow: rgba(30, 64, 175, 0.25);
+
+        /* Dark theme (scene 5) */
+        --dark-bg: hsl(224, 71%, 4%);
+        --dark-accent: hsl(210, 100%, 60%);
+
+        /* Fonts */
+        --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+        --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f1f5f9;
+        font-family: var(--font-sans);
+        user-select: none;
+      }
+
+      /* ===== SCENE BASE ===== */
+      .scene {
+        position: absolute;
+        top: 0; left: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+
+      /* ===== SCENE 1: NOTEBOOK 3D ISOMÉTRICA ===== */
+      #scene1 {
+        background: radial-gradient(circle at 50% 40%, #ffffff 0%, #e2e8f0 50%, #cbd5e1 100%);
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Ambient light particles */
+      .ambient-dot {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(30, 64, 175, 0.08);
+        pointer-events: none;
+      }
+
+      .notebook-container {
+        position: relative;
+        width: 1400px;
+        height: 900px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform-style: preserve-3d;
+        z-index: 2;
+      }
+
+      .notebook-3d {
+        position: relative;
+        width: 1200px;
+        height: 760px;
+        transform-style: preserve-3d;
+        transform: perspective(1800px) rotateX(22deg) rotateY(-15deg) rotateZ(4deg);
+      }
+
+      .notebook-screen-border {
+        position: absolute;
+        width: 100%;
+        height: 680px;
+        background: #0f172a;
+        border: 16px solid #1e293b;
+        border-radius: 20px 20px 0 0;
+        box-shadow:
+          0 -10px 40px rgba(0, 0, 0, 0.12),
+          -20px 20px 50px rgba(15, 23, 42, 0.3);
+        transform-origin: bottom center;
+        transform: rotateX(-12deg);
+        overflow: hidden;
+      }
+
+      .notebook-screen-content {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* Real app screenshot inside notebook screen */
+      .notebook-screen-content img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top left;
+      }
+
+      .notebook-base-3d {
+        position: absolute;
+        top: 668px;
+        left: -50px;
+        width: 1300px;
+        height: 32px;
+        background: linear-gradient(to bottom, #94a3b8 0%, #475569 100%);
+        border-radius: 0 0 20px 20px;
+        box-shadow:
+          0 25px 50px rgba(0, 0, 0, 0.25),
+          0 10px 15px rgba(0, 0, 0, 0.15);
+        transform-origin: top center;
+        transform: rotateX(76deg);
+      }
+
+      .notebook-base-bevel {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        height: 4px;
+        background: #cbd5e1;
+      }
+
+      .notebook-trackpad {
+        position: absolute;
+        top: 10px;
+        left: 540px;
+        width: 220px;
+        height: 14px;
+        background: rgba(15, 23, 42, 0.15);
+        border-radius: 4px;
+      }
+
+      /* Text overlay scene 1 */
+      .overlay-text-s1 {
+        position: absolute;
+        bottom: 110px;
+        left: 100px;
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        font-size: 54px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        z-index: 5;
+        border-left: 6px solid var(--accent-color);
+        padding-left: 28px;
+        padding-bottom: 20px; /* Prevent subtitle text box overflow */
+        line-height: 1.2;
+      }
+
+      .overlay-text-s1 .subtitle {
+        display: block;
+        font-size: 22px;
+        font-weight: 400;
+        color: var(--text-secondary);
+        margin-top: 8px; /* Tighter layout */
+        letter-spacing: 0.02em;
+      }
+
+      /* ===== SCENE 2: ZOOM AL TABLERO ===== */
+      #scene2 {
+        z-index: 2;
+        opacity: 0;
+        background: var(--bg-app);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .scene-app-frame {
+        position: relative;
+        width: 1600px;
+        height: 910px;
+        border-radius: 16px;
+        border: 1px solid var(--border-glass);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        background: var(--bg-app);
+      }
+
+      .scene-app-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top left;
+      }
+
+      /* Feature callout labels */
+      .feature-callout {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(30, 64, 175, 0.2);
+        border-radius: 10px;
+        padding: 12px 18px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        opacity: 0;
+        /* transform handled by GSAP fromTo to avoid CSS/GSAP conflict */
+      }
+
+      .feature-callout .callout-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: var(--accent-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 6px;
+      }
+
+      .feature-callout .callout-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .feature-callout .callout-desc {
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+
+      /* ===== SCENE 3: PDF FOCUS ===== */
+      #scene3 {
+        z-index: 3;
+        opacity: 0;
+        background: var(--bg-app);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Highlight marker */
+      .pdf-highlight-marker {
+        position: absolute;
+        background: rgba(253, 224, 71, 0.35);
+        border-radius: 4px;
+        pointer-events: none;
+        z-index: 10;
+        mix-blend-mode: multiply;
+        opacity: 0;
+      }
+
+      /* ===== SCENE 4: GAME MODE ===== */
+      #scene4 {
+        z-index: 4;
+        opacity: 0;
+        background: var(--bg-app);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Mode transition badge */
+      .mode-badge {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--accent-color);
+        color: #ffffff;
+        font-family: var(--font-sans);
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 16px 40px;
+        border-radius: 12px;
+        box-shadow: 0 12px 40px var(--accent-glow);
+        z-index: 20;
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+      }
+
+      /* ===== SCENE 5: OUTRO & BRANDING (DARK) ===== */
+      #scene5 {
+        z-index: 5;
+        opacity: 0;
+        background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .outro-app-preview {
+        width: 800px;
+        height: 450px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        margin-bottom: 40px;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      .outro-app-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top left;
+      }
+
+      .outro-title {
+        color: #ffffff;
+        font-family: var(--font-sans);
+        font-size: 52px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      .outro-tagline {
+        color: #94a3b8;
+        font-family: var(--font-sans);
+        font-size: 20px;
+        font-weight: 400;
+        margin-bottom: 40px;
+        letter-spacing: 0.05em;
+        opacity: 0;
+        transform: translateY(15px);
+      }
+
+      .outro-url {
+        font-family: var(--font-mono);
+        font-size: 16px;
+        color: var(--dark-accent);
+        background: rgba(59, 130, 246, 0.12);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        padding: 10px 24px;
+        border-radius: 8px;
+        letter-spacing: 0.05em;
+        opacity: 0;
+        transform: translateY(10px);
+        box-shadow: 0 0 24px rgba(59, 130, 246, 0.15);
+      }
+
+      /* ===== CURSOR ===== */
+      .cursor-interactive {
+        position: absolute;
+        width: 28px;
+        height: 28px;
+        z-index: 1000;
+        pointer-events: none;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      }
+
+      .ripple {
+        position: absolute;
+        width: 24px;
+        height: 24px;
+        border: 2px solid var(--accent-color);
+        border-radius: 50%;
+        background: rgba(30, 64, 175, 0.15);
+        pointer-events: none;
+        z-index: 99;
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- COMPOSICIÓN PRINCIPAL -->
+    <div
+      id="root"
+      data-composition-id="main"
+      data-width="1920"
+      data-height="1080"
+      data-start="0"
+      data-duration="30"
+    >
+      <!-- Cursor y Ripple globales -->
+      <div id="ripple" class="ripple"></div>
+      <svg id="cursor" class="cursor-interactive" viewBox="0 0 24 24" width="28" height="28">
+        <path d="M4 3l15 10-6.2 1.8L18 21l-2.5 1.2-5.1-6.1L4 19V3z" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+
+      <!-- ============================================== -->
+      <!-- ESCENA 1: NOTEBOOK 3D CON APP REAL             -->
+      <!-- ============================================== -->
+      <div id="scene1" class="scene">
+        <!-- Ambient decorative dots -->
+        <div class="ambient-dot" data-layout-allow-overflow style="width: 300px; height: 300px; top: -50px; right: -80px; opacity: 0.5;"></div>
+        <div class="ambient-dot" data-layout-allow-overflow style="width: 200px; height: 200px; bottom: 50px; left: -40px; opacity: 0.3;"></div>
+        <div class="ambient-dot" data-layout-allow-overflow style="width: 150px; height: 150px; top: 200px; left: 200px; opacity: 0.2;"></div>
+
+        <div class="notebook-container">
+          <div class="notebook-3d">
+            <div class="notebook-screen-border">
+              <div class="notebook-screen-content">
+                <!-- SCREENSHOT REAL: App en modo editor, tema claro, tablero ocean, PDF Grau pag 89 -->
+                <img src="./assets/app-editor-light-ocean.png" alt="Chess Study - Editor con PDF de Roberto Grau" />
+              </div>
+            </div>
+            <div class="notebook-base-3d">
+              <div class="notebook-base-bevel"></div>
+              <div class="notebook-trackpad"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Texto superpuesto -->
+        <div class="overlay-text-s1" id="s1-text">
+          El entorno definitivo<br/>para estudiar ajedrez.
+          <span class="subtitle">Tablero interactivo + Visor PDF integrado</span>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- ESCENA 2: CLOSE-UP MODO EDITOR                -->
+      <!-- ============================================== -->
+      <div id="scene2" class="scene">
+        <div class="scene-app-frame" id="s2-frame" data-layout-allow-overflow style="overflow: visible;">
+          <!-- SCREENSHOT REAL: App editor con PDF -->
+          <img src="./assets/app-editor-light-ocean.png" alt="Chess Study Editor" />
+
+          <!-- Feature callouts que aparecen sobre la imagen -->
+          <div class="feature-callout" id="callout-board" style="left: 60px; top: 100px; width: 200px;">
+            <div class="callout-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+            </div>
+            <div class="callout-title">Tablero Ocean</div>
+            <div class="callout-desc">Editor libre con paleta de piezas SVG</div>
+          </div>
+
+          <div class="feature-callout" id="callout-pdf" style="right: 60px; top: 100px; width: 220px;">
+            <div class="callout-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <div class="callout-title">Visor PDF Nativo</div>
+            <div class="callout-desc">Roberto Grau - Tomo I, Diagrama N° 134</div>
+          </div>
+
+          <div class="feature-callout" id="callout-btn" style="left: 120px; bottom: 80px; width: 240px;">
+            <div class="callout-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="callout-title">Un clic para analizar</div>
+            <div class="callout-desc">Juega desde cualquier posición del tablero</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- ESCENA 3: ENFOQUE EN PDF + SINCRONIZACIÓN      -->
+      <!-- ============================================== -->
+      <div id="scene3" class="scene">
+        <div class="scene-app-frame" id="s3-frame" data-layout-allow-overflow>
+          <!-- SCREENSHOT REAL: App editor con PDF -->
+          <img src="./assets/app-editor-light-ocean.png" alt="Chess Study PDF Viewer" />
+
+          <!-- Highlight marker sobre el diagrama del PDF -->
+          <div class="pdf-highlight-marker" id="s3-marker" style="right: 120px; top: 350px; width: 280px; height: 230px;"></div>
+        </div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- ESCENA 4: TRANSICIÓN A MODO JUEGO              -->
+      <!-- ============================================== -->
+      <div id="scene4" class="scene">
+        <!-- La escena muestra la transición visual del modo editor al modo juego -->
+        <div class="scene-app-frame" id="s4-frame" data-layout-allow-overflow>
+          <!-- Imagen del editor (se reemplaza visualmente) -->
+          <img id="s4-editor-img" src="./assets/app-editor-light-ocean.png" alt="Chess Study Editor" style="position: absolute; width: 100%; height: 100%; object-fit: cover;" />
+          <!-- Imagen del modo juego con movimientos (aparece encima) -->
+          <img id="s4-game-img" src="./assets/app-game-with-moves.png" alt="Chess Study Game Mode" style="position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0;" />
+        </div>
+
+        <!-- Badge de transición de modo -->
+        <div class="mode-badge" id="s4-mode-badge" data-layout-allow-overflow>▶ MODO JUEGO ACTIVADO</div>
+      </div>
+
+      <!-- ============================================== -->
+      <!-- ESCENA 5: OUTRO & BRANDING (MODO OSCURO)       -->
+      <!-- ============================================== -->
+      <div id="scene5" class="scene">
+        <!-- Preview de la app en dark mode -->
+        <div class="outro-app-preview" id="s5-preview">
+          <!-- SCREENSHOT REAL: App en dark mode -->
+          <img src="./assets/app-dark-mode.png" alt="Chess Study Dark Mode" />
+        </div>
+
+        <div class="outro-title" id="s5-title">CHESS STUDY</div>
+        <div class="outro-tagline" id="s5-tagline">Lector de Libros & Tablero de Análisis</div>
+        <div class="outro-url" id="s5-url">chessstudy.vercel.app</div>
+      </div>
+    </div>
+
+    <!-- ANIMACIONES GSAP -->
+    <script>
+      // ==============================================
+      // TIMELINE PRINCIPAL
+      // ==============================================
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+
+      // Init cursor offscreen
+      tl.set("#cursor", { x: -100, y: -100, scale: 1 }, 0);
+
+      // ----------------------------------------------
+      // ESCENA 1: NOTEBOOK 3D [00:00 - 00:05]
+      // ----------------------------------------------
+      // Dolly-in cinematográfico hacia la notebook
+      tl.fromTo(".notebook-3d",
+        { scale: 0.85, y: 40, rotationX: 26, rotationY: -18, rotationZ: 5 },
+        { scale: 1.08, y: -15, rotationX: 18, rotationY: -10, rotationZ: 2, duration: 5.0, ease: "sine.inOut" },
+        0
+      );
+
+      // Texto overlay entrada
+      tl.fromTo("#s1-text",
+        { opacity: 0, x: 40, filter: "blur(6px)" },
+        { opacity: 1, x: 100, filter: "blur(0px)", duration: 1.4, ease: "power3.out" },
+        0.6
+      );
+
+      // Ambient dots floating
+      tl.to(".ambient-dot", {
+        y: -30, opacity: 0.15, duration: 4, ease: "sine.inOut", stagger: 0.3
+      }, 0);
+
+      // ----------------------------------------------
+      // TRANSICIÓN 1 → 2 [04.5 - 05.3]
+      // Zoom-in desde notebook a app a pantalla completa
+      // ----------------------------------------------
+      tl.to("#scene1", { opacity: 0, scale: 1.5, filter: "blur(14px)", duration: 0.8, ease: "power2.inOut" }, 4.5);
+      tl.set("#scene1", { visibility: "hidden" }, 5.3);
+      tl.fromTo("#scene2",
+        { opacity: 0, scale: 0.65, filter: "blur(14px)" },
+        { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.8, ease: "power2.inOut" },
+        4.5
+      );
+
+      // ----------------------------------------------
+      // ESCENA 2: EDITOR CLOSE-UP [00:05 - 00:12]
+      // Cursor señala features de la app real
+      // ----------------------------------------------
+
+      // Cursor entra desde la derecha
+      tl.fromTo("#cursor",
+        { x: 1920, y: 1080, scale: 1.2 },
+        { x: 350, y: 450, scale: 1, duration: 1.0, ease: "power3.out" },
+        5.5
+      );
+
+      // Callout: Tablero Ocean (izquierda)
+      tl.fromTo("#callout-board", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 6.2);
+      tl.to("#cursor", { x: 200, y: 400, duration: 0.6, ease: "power2.inOut" }, 6.6);
+
+      // Cursor se mueve al PDF (derecha)
+      tl.to("#cursor", { x: 1200, y: 400, duration: 1.0, ease: "power2.inOut" }, 7.2);
+
+      // Callout: Visor PDF
+      tl.fromTo("#callout-pdf", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 7.8);
+
+      // Cursor baja al botón
+      tl.to("#cursor", { x: 350, y: 780, duration: 0.8, ease: "power2.inOut" }, 9.0);
+
+      // Callout: Botón de juego
+      tl.fromTo("#callout-btn", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 9.5);
+
+      // Clic del cursor en el botón
+      tl.to("#cursor", { scale: 0.8, duration: 0.1 }, 10.2);
+      tl.to("#cursor", { scale: 1.0, duration: 0.1 }, 10.3);
+
+      // Ripple en el botón
+      tl.set("#ripple", { x: 350, y: 780 }, 10.3);
+      tl.fromTo("#ripple",
+        { scale: 0, opacity: 1 },
+        { scale: 2.5, opacity: 0, duration: 0.6, ease: "power2.out" },
+        10.3
+      );
+
+      // Fade out callouts before transition
+      tl.to(".feature-callout", { opacity: 0, y: -10, duration: 0.4, stagger: 0.05 }, 10.8);
+
+      // ----------------------------------------------
+      // TRANSICIÓN 2 → 3 [11.3 - 12.0] (Pan horizontal)
+      // App se desplaza para enfocar el panel PDF
+      // ----------------------------------------------
+      tl.to("#scene2", { x: -1920, duration: 0.7, ease: "power3.inOut" }, 11.3);
+      tl.set("#scene2", { visibility: "hidden" }, 12.0);
+      tl.fromTo("#scene3",
+        { x: 1920, opacity: 1 },
+        { x: 0, duration: 0.7, ease: "power3.inOut" },
+        11.3
+      );
+
+      // ----------------------------------------------
+      // ESCENA 3: PDF FOCUS [00:12 - 00:18]
+      // Zoom-in al contenido del PDF, highlight del diagrama
+      // ----------------------------------------------
+
+      // El frame del app hace zoom al panel derecho (PDF)
+      tl.to("#s3-frame", {
+        scale: 1.6,
+        x: -520,
+        y: -60,
+        duration: 2.0,
+        ease: "power2.inOut"
+      }, 12.5);
+
+      // Cursor se posiciona sobre el diagrama
+      tl.to("#cursor", { x: 1050, y: 480, duration: 1.0, ease: "power2.out" }, 13.5);
+
+      // Marker highlight aparece sobre el diagrama
+      tl.fromTo("#s3-marker",
+        { scaleX: 0, transformOrigin: "left center", opacity: 0 },
+        { scaleX: 1, opacity: 1, duration: 0.8, ease: "power2.out" },
+        14.5
+      );
+
+      // Cursor señala movimientos del libro
+      tl.to("#cursor", { x: 800, y: 550, duration: 0.8, ease: "power2.out" }, 15.5);
+
+      // Zoom back out slightly
+      tl.to("#s3-frame", {
+        scale: 1.0,
+        x: 0,
+        y: 0,
+        duration: 1.5,
+        ease: "power2.inOut"
+      }, 16.5);
+
+      // Fade marker
+      tl.to("#s3-marker", { opacity: 0, duration: 0.4 }, 16.8);
+
+      // ----------------------------------------------
+      // TRANSICIÓN 3 → 4 [17.5 - 17.9] (Whip-pan)
+      // ----------------------------------------------
+      tl.to("#scene3", { x: 1920, filter: "blur(18px)", duration: 0.4, ease: "power4.inOut" }, 17.5);
+      tl.set("#scene3", { visibility: "hidden" }, 17.9);
+      tl.fromTo("#scene4",
+        { x: -1920, filter: "blur(18px)", opacity: 1 },
+        { x: 0, filter: "blur(0px)", duration: 0.4, ease: "power4.inOut" },
+        17.5
+      );
+
+      // ----------------------------------------------
+      // ESCENA 4: MODO JUEGO [00:18 - 00:25]
+      // Transición de editor a modo juego
+      // ----------------------------------------------
+
+      // Cursor vuela al botón "Empezar"
+      tl.to("#cursor", { x: 400, y: 800, scale: 1, duration: 0.8, ease: "power2.out" }, 18.2);
+
+      // Clic
+      tl.to("#cursor", { scale: 0.8, duration: 0.1 }, 19.0);
+      tl.to("#cursor", { scale: 1.0, duration: 0.1 }, 19.1);
+
+      // Ripple
+      tl.set("#ripple", { x: 400, y: 800 }, 19.1);
+      tl.fromTo("#ripple",
+        { scale: 0, opacity: 1 },
+        { scale: 3, opacity: 0, duration: 0.6, ease: "power2.out" },
+        19.1
+      );
+
+      // Mode badge flash
+      tl.to("#s4-mode-badge", {
+        opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.7)"
+      }, 19.3);
+
+      // Crossfade from editor to game mode screenshot
+      tl.to("#s4-game-img", { opacity: 1, duration: 0.6, ease: "power2.inOut" }, 19.5);
+      tl.to("#s4-editor-img", { opacity: 0, duration: 0.6, ease: "power2.inOut" }, 19.5);
+
+      // Mode badge fades out
+      tl.to("#s4-mode-badge", { opacity: 0, scale: 1.1, duration: 0.4, ease: "power2.in" }, 20.2);
+
+      // Show the game state with notation panel visible
+      // Cursor explores the game mode interface
+      tl.to("#cursor", { x: 100, y: 300, duration: 1.0, ease: "power2.inOut" }, 20.8);
+
+      // Cursor moves to notation panel
+      tl.to("#cursor", { x: 80, y: 200, duration: 0.6, ease: "power2.out" }, 22.0);
+
+      // Cursor fades out
+      tl.to("#cursor", { y: -100, opacity: 0, duration: 0.8, ease: "power2.in" }, 23.0);
+
+      // ----------------------------------------------
+      // TRANSICIÓN 4 → 5 [24.2 - 25.0]
+      // Zoom-out + fade to dark mode
+      // ----------------------------------------------
+      tl.to("#scene4", { opacity: 0, scale: 0.85, filter: "blur(15px)", duration: 0.8, ease: "power2.in" }, 24.2);
+      tl.set("#scene4", { visibility: "hidden" }, 25.0);
+      tl.fromTo("#scene5",
+        { opacity: 0, scale: 1.1 },
+        { opacity: 1, scale: 1, duration: 0.8, ease: "power2.out" },
+        24.2
+      );
+
+      // ----------------------------------------------
+      // ESCENA 5: OUTRO [00:25 - 00:30]
+      // Dark mode preview + branding
+      // ----------------------------------------------
+
+      // Dark mode app preview slides in
+      tl.to("#s5-preview", { opacity: 1, y: 0, duration: 1.0, ease: "power3.out" }, 25.0);
+
+      // Title
+      tl.to("#s5-title", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, 25.8);
+
+      // Tagline
+      tl.to("#s5-tagline", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, 26.2);
+
+      // URL
+      tl.to("#s5-url", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, 26.6);
+
+      // Final fade to black
+      tl.to("#scene5", { opacity: 0, filter: "brightness(0)", duration: 1.0, ease: "sine.in" }, 29.0);
+      tl.set("#scene5", { visibility: "hidden" }, 30.0);
+    </script>
+  </body>
+</html>
