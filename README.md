@@ -1,7 +1,7 @@
 # 👑 Chess Study
 ### *Lector de libros de ajedrez en PDF y Tablero de Análisis interactivo en una sola pantalla.*
 
-**Chess Study** es una aplicación web de una sola página (SPA) moderna, fluida y premium diseñada específicamente para resolver la fricción más común de los estudiantes de ajedrez: tener que cambiar constantemente de ventanas entre un libro digital en PDF y un tablero de análisis físico o digital. 
+**Chess Study** es una aplicación web de una sola página (SPA) moderna fluida diseñada específicamente para resolver una de las fricciones más comunes de los estudiantes de ajedrez: tener que cambiar constantemente de ventanas entre un libro digital en PDF y un tablero de análisis digital. 
 
 Al unificar un **visor de PDF de alto rendimiento** y un **tablero de ajedrez inteligente** en una interfaz interactiva de pantalla dividida (*split screen*), la aplicación te permite leer tus libros preferidos y replicar, analizar o jugar las jugadas del libro al instante, en tiempo real y sin interrupciones.
 
@@ -9,19 +9,18 @@ Al unificar un **visor de PDF de alto rendimiento** y un **tablero de ajedrez in
 
 ## ✨ Características Principales
 
-### 🖥️ Interfaz Premium y Layout Resizable
-* **Split Screen Responsivo:** Divide la pantalla horizontalmente en dos paneles principales que puedes redimensionar arrastrando un divisor interactivo (*Resizer*). En dispositivos móviles, los paneles se apilan verticalmente de forma automática (tablero arriba, PDF abajo).
-* **Estética de Alta Gama (Glassmorphic):** Construido sobre un elegante diseño de vidrio translúcido con desenfoque de fondo (*backdrop filter*) y variables de color en HSL.
+### 🖥️ Interfaz Limpia y Layout Resizable
+* **Split Screen Responsivo:** Divide la pantalla horizontalmente en dos paneles principales que puedes redimensionar arrastrando un divisor interactivo (*Resizer*). En dispositivos móviles, los paneles se apilan verticalmente de forma automática (tablero arriba, PDF abajo) aunque es recomendable su uso en PC o tablets para una mejor experiencia.
+* **Estética Fluida (Glassmorphic):** Construido sobre un diseño minimalista, limpio y moderno.
 * **Modo Claro y Oscuro Inteligente:** Soporte nativo y automático basado en las preferencias del sistema operativo del usuario, con posibilidad de conmutar de forma manual e instantánea en la cabecera.
 * **Configuración del Tablero:** Permite invertir el orden de los paneles (PDF a la izquierda, tablero a la derecha), cambiar el estilo de las casillas (Clásico, Madera, Océano, Slate, Cyberpunk) y rotar la perspectiva de las piezas.
 
 ### 📚 Visor PDF de Nivel Profesional (PDF.js v4.2.67)
-* **Fluidez Extrema (60 FPS):** Embebe el motor nativo oficial de **PDF.js** dentro de un `<iframe>` de la misma procedencia (Same-Origin). Esto delega la renderización pesada a un hilo secundario (*Web Worker*) acelerado por GPU, logrando desplazamientos fluidos incluso en tomos masivos de más de 300 páginas.
-* **Auto-Ajuste de Ancho Responsivo:** Las páginas se auto-ajustan a la anchura del panel en tiempo real a medida que arrastras la barra divisoria, con sincronización interactiva del zoom en la toolbar de React.
+* **Fluidez Extrema (60 FPS):** Usa el motor nativo oficial de **PDF.js** dentro de un `<iframe>` de la misma procedencia (Same-Origin). Esto delega la renderización pesada a un hilo secundario (*Web Worker*) acelerado por GPU, logrando desplazamientos fluidos incluso en tomos masivos de más de 300 páginas.
+* **Auto-Ajuste de Ancho Responsivo:** Las páginas se auto-ajustan a la anchura del panel en tiempo real a medida que arrastras la barra divisoria, con sincronización interactiva del zoom.
 * **Persistencia Novedosa de Lectura:** 
   * **Almacenamiento Local (IndexedDB):** Tu PDF cargado se guarda localmente en el navegador, evitando tener que re-subir el archivo cada vez que abres la app.
   * **Memoria de Página:** El lector recuerda exactamente la página en la que te quedaste en tu última lectura y la posiciona al instante al recargar la pestaña.
-* **Scroll Horizontal Inteligente:** Supresión de barras horizontales innecesarias en ajuste al ancho de página, apareciendo de forma automática y dinámica al aumentar el zoom de la hoja (con pasos precisos del 10% en 10%).
 
 ### ♟️ Tablero de Ajedrez Inteligente con Doble Modo
 * **algebraic Notation:** El tablero incluye siempre coordenadas visibles en los bordes para una lectura y ubicación espacial óptima.
@@ -38,7 +37,7 @@ Al unificar un **visor de PDF de alto rendimiento** y un **tablero de ajedrez in
   * Botón de retorno al "Modo Editor" para continuar modificando piezas libremente.
 
 ### 📖 Biblioteca de Clásicos de Roberto Grau Integrada
-* ¿No tienes un libro en PDF a mano? El estado vacío de la app te ofrece **4 tarjetas premium** con los tomos de la obra más emblemática de la literatura en español: el **Tratado General de Ajedrez de Roberto Grau** (Tomo I al IV).
+* ¿No tienes un libro en PDF a mano? El estado vacío de la app te ofrece **4 tarjetas** con los tomos de la obra más emblemática de la literatura en español: el **Tratado General de Ajedrez de Roberto Grau** (Tomo I al IV).
 * Servidos localmente en el servidor, al pulsar sobre cualquiera de ellos la aplicación descarga y convierte el binario en un archivo virtual al vuelo, cargándolo instantáneamente con soporte de memoria de páginas e IndexedDB nativo.
 
 ---
@@ -110,6 +109,6 @@ Sigue estos sencillos pasos para levantar el entorno de desarrollo localmente:
 
 ## 📚 Una Invitación al Estudio
 
-El ajedrez se aprende practicando. **Chess Study** ha sido desarrollado con todo el amor y el respeto por el ajedrez clásico y moderno para ser la herramienta definitiva en tu camino de maestría. 
+El ajedrez se aprende practicando. **Chess Study** ha sido desarrollado con todo el amor y el respeto por el ajedrez clásico y moderno para ser una herramienta útil en tu camino de maestría. 
 
 Abre el **Tomo I de Grau** directamente de las tarjetas inferiores o arrastra tu manual favorito, acomoda las piezas en el tablero y lleva tu nivel de análisis al siguiente escalón. *¡Que disfrutes tu entrenamiento!* ♟️📖
