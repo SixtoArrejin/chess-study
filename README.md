@@ -1,4 +1,4 @@
-# 👑 Chess Study
+# ♟️📖 Chess Study
 ### *Lector de libros de ajedrez en PDF y Tablero de Análisis interactivo en una sola pantalla.*
 
 **Chess Study** es una aplicación web de una sola página (SPA) moderna fluida diseñada específicamente para resolver una de las fricciones más comunes de los estudiantes de ajedrez: tener que cambiar constantemente de ventanas entre un libro digital en PDF y un tablero de análisis digital. 
