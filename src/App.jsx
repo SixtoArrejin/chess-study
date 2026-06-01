@@ -130,6 +130,12 @@ export default function App() {
     localStorage.removeItem('chess-study-board-theme');
     localStorage.removeItem('chess-study-left-width');
     localStorage.removeItem('chess-study-pdf-toolbar-visible');
+    localStorage.removeItem('chess-study-is-game-mode');
+    localStorage.removeItem('chess-study-board-pieces');
+    localStorage.removeItem('chess-study-board-orientation');
+    localStorage.removeItem('chess-study-fen-history');
+    localStorage.removeItem('chess-study-history-index');
+    localStorage.removeItem('chess-study-move-list');
     setIsSettingsOpen(false);
   };
 

@@ -23,21 +23,55 @@ const THEME_COLORS = {
 
 export default function ChessPanel({ boardTheme, onOpenSettings }) {
   /* ===== Mode ===== */
-  const [isGameMode, setIsGameMode] = useState(false);
+  const [isGameMode, setIsGameMode] = useState(() => {
+    const saved = localStorage.getItem('chess-study-is-game-mode');
+    return saved ? JSON.parse(saved) : false;
+  });
 
   /* ===== Editor state ===== */
-  const [boardPieces, setBoardPieces] = useState(STARTING_POSITION_OBJECT);
+  const [boardPieces, setBoardPieces] = useState(() => {
+    const saved = localStorage.getItem('chess-study-board-pieces');
+    return saved ? JSON.parse(saved) : STARTING_POSITION_OBJECT;
+  });
   const [selectedBrush, setSelectedBrush] = useState(null);
-  const [boardOrientation, setBoardOrientation] = useState('white');
+  const [boardOrientation, setBoardOrientation] = useState(() => {
+    return localStorage.getItem('chess-study-board-orientation') || 'white';
+  });
 
   /* ===== Game state ===== */
-  const [game, setGame] = useState(null);
-  const [fenHistory, setFenHistory] = useState([STARTING_FEN]);
-  const [historyIndex, setHistoryIndex] = useState(0);
+  const [game, setGame] = useState(() => {
+    const savedIsGameMode = localStorage.getItem('chess-study-is-game-mode');
+    const isGame = savedIsGameMode ? JSON.parse(savedIsGameMode) : false;
+    if (isGame) {
+      const savedHistory = localStorage.getItem('chess-study-fen-history');
+      const savedIndex = localStorage.getItem('chess-study-history-index');
+      const history = savedHistory ? JSON.parse(savedHistory) : [STARTING_FEN];
+      const index = savedIndex ? parseInt(savedIndex, 10) : 0;
+      const currentFenInHistory = history[index] || STARTING_FEN;
+      try {
+        return new Chess(currentFenInHistory);
+      } catch (e) {
+        console.error("Error restoring Chess game:", e);
+        return null;
+      }
+    }
+    return null;
+  });
+  const [fenHistory, setFenHistory] = useState(() => {
+    const saved = localStorage.getItem('chess-study-fen-history');
+    return saved ? JSON.parse(saved) : [STARTING_FEN];
+  });
+  const [historyIndex, setHistoryIndex] = useState(() => {
+    const saved = localStorage.getItem('chess-study-history-index');
+    return saved ? parseInt(saved, 10) : 0;
+  });
   const [gameStatusText, setGameStatusText] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [showTurnModal, setShowTurnModal] = useState(false);
-  const [moveList, setMoveList] = useState([]);
+  const [moveList, setMoveList] = useState(() => {
+    const saved = localStorage.getItem('chess-study-move-list');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const activeColors = THEME_COLORS[boardTheme] || THEME_COLORS.classic;
 
@@ -57,6 +91,31 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
 
   /* ===== Effects ===== */
   useEffect(() => { setErrorMessage(''); if (!isGameMode) setSelectedBrush(null); }, [isGameMode]);
+
+  /* ===== Persistence Effects ===== */
+  useEffect(() => {
+    localStorage.setItem('chess-study-is-game-mode', JSON.stringify(isGameMode));
+  }, [isGameMode]);
+
+  useEffect(() => {
+    localStorage.setItem('chess-study-board-pieces', JSON.stringify(boardPieces));
+  }, [boardPieces]);
+
+  useEffect(() => {
+    localStorage.setItem('chess-study-board-orientation', boardOrientation);
+  }, [boardOrientation]);
+
+  useEffect(() => {
+    localStorage.setItem('chess-study-fen-history', JSON.stringify(fenHistory));
+  }, [fenHistory]);
+
+  useEffect(() => {
+    localStorage.setItem('chess-study-history-index', String(historyIndex));
+  }, [historyIndex]);
+
+  useEffect(() => {
+    localStorage.setItem('chess-study-move-list', JSON.stringify(moveList));
+  }, [moveList]);
 
   useEffect(() => {
     if (!isGameMode || !game) return;
