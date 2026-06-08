@@ -1,0 +1,98 @@
+{
+  "files": [
+    {
+      "file": "QGYyz_MVcBeNP4NjuGObqx1XmO1I4bC1C4E.ttf",
+      "family": "Outfit",
+      "rawFamily": "Outfit ExtraLight",
+      "subfamily": "Regular",
+      "postscript": "Outfit-ExtraLight",
+      "weight": 250,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true
+    },
+    {
+      "file": "QGYyz_MVcBeNP4NjuGObqx1XmO1I4deyC4E.ttf",
+      "family": "Outfit",
+      "rawFamily": "Outfit",
+      "subfamily": "Bold",
+      "postscript": "Outfit-Bold",
+      "weight": 700,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true
+    },
+    {
+      "file": "QGYyz_MVcBeNP4NjuGObqx1XmO1I4e6yC4E.ttf",
+      "family": "Outfit",
+      "rawFamily": "Outfit SemiBold",
+      "subfamily": "Regular",
+      "postscript": "Outfit-SemiBold",
+      "weight": 600,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true
+    },
+    {
+      "file": "QGYyz_MVcBeNP4NjuGObqx1XmO1I4QK1C4E.ttf",
+      "family": "Outfit",
+      "rawFamily": "Outfit Medium",
+      "subfamily": "Regular",
+      "postscript": "Outfit-Medium",
+      "weight": 500,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true
+    },
+    {
+      "file": "QGYyz_MVcBeNP4NjuGObqx1XmO1I4TC1C4E.ttf",
+      "family": "Outfit",
+      "rawFamily": "Outfit",
+      "subfamily": "Regular",
+      "postscript": "Outfit-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true
+    },
+    {
+      "file": "QGYyz_MVcBeNP4NjuGObqx1XmO1I4W61C4E.ttf",
+      "family": "Outfit",
+      "rawFamily": "Outfit Light",
+      "subfamily": "Regular",
+      "postscript": "Outfit-Light",
+      "weight": 300,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true
+    }
+  ],
+  "families": [
+    {
+      "family": "Outfit",
+      "weights": [
+        250,
+        300,
+        400,
+        500,
+        600,
+        700
+      ],
+      "variable": false,
+      "fileCount": 6,
+      "files": [
+        "QGYyz_MVcBeNP4NjuGObqx1XmO1I4QK1C4E.ttf",
+        "QGYyz_MVcBeNP4NjuGObqx1XmO1I4TC1C4E.ttf",
+        "QGYyz_MVcBeNP4NjuGObqx1XmO1I4W61C4E.ttf",
+        "QGYyz_MVcBeNP4NjuGObqx1XmO1I4bC1C4E.ttf",
+        "QGYyz_MVcBeNP4NjuGObqx1XmO1I4deyC4E.ttf",
+        "QGYyz_MVcBeNP4NjuGObqx1XmO1I4e6yC4E.ttf"
+      ]
+    }
+  ],
+  "unidentified": [],
+  "meta": {
+    "generatedAt": "2026-06-08T18:14:38.896Z",
+    "tool": "fontkit"
+  }
+}

@@ -176,6 +176,245 @@ export default function App() {
     </div>
   );
 
+  /* ========= VIDEO AUTOMATION HOOK ========= */
+  useEffect(() => {
+    window.__appControl = {
+      setTheme,
+      setLayoutInverted,
+      setBoardTheme,
+      setIsSettingsOpen,
+      setLeftWidthPercent,
+      loadBook: async () => {
+        try {
+          const response = await fetch('/books/Tratado_General_de_Ajedrez_Tomo_I_Rudime_crop.pdf');
+          const blob = await response.blob();
+          const file = new File([blob], 'Tratado_General_de_Ajedrez_Tomo_I_Rudime_crop.pdf', { type: 'application/pdf' });
+          
+          // Force starting on page 1 (which corresponds to page 80 of the book)
+          const key = `chess_study_last_page_${file.name}_${file.size}`;
+          localStorage.setItem(key, '1');
+
+          setPdfFile(file);
+          setPdfReady(true);
+        } catch (e) {
+          console.error("Error auto-loading book for video:", e);
+        }
+      }
+    };
+  }, [setTheme, setLayoutInverted, setBoardTheme, setIsSettingsOpen, setLeftWidthPercent]);
+
+  useEffect(() => {
+    if (window.location.search.includes('video=true')) {
+      const autoLoad = async () => {
+        try {
+          const response = await fetch('/books/Tratado_General_de_Ajedrez_Tomo_I_Rudime_crop.pdf');
+          const blob = await response.blob();
+          const file = new File([blob], 'Tratado_General_de_Ajedrez_Tomo_I_Rudime_crop.pdf', { type: 'application/pdf' });
+          
+          const key = `chess_study_last_page_${file.name}_${file.size}`;
+          localStorage.setItem(key, '1');
+
+          setPdfFile(file);
+          setPdfReady(true);
+        } catch (e) {
+          console.error("Error auto-loading book on mount for video:", e);
+        }
+      };
+      autoLoad();
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleMessage = (e) => {
+      if (e.data && e.data.source === 'hyperframes-video') {
+        const { target, action, payload } = e.data;
+        
+        // 1. Direct hooks routing
+        if (target === 'app' && window.__appControl && window.__appControl[action]) {
+          window.__appControl[action](payload);
+        } else if (target === 'chess' && window.__chessControl && window.__chessControl[action]) {
+          window.__chessControl[action](payload);
+        } else if (target === 'pdf' && window.__pdfControl && window.__pdfControl[action]) {
+          window.__pdfControl[action](payload);
+        }
+        
+        // 2. Custom DOM automation actions
+        if (action === 'scrollToPageProgress') {
+          const { fromPage, toPage, progress } = payload;
+          try {
+            const fromP = fromPage || 77;
+            const toP = toPage;
+
+            const iframeDoc = document.querySelector('iframe[title="Visualizador PDF"]')?.contentDocument;
+            const viewerContainer = iframeDoc?.getElementById('viewerContainer');
+            const fromPageEl = iframeDoc?.querySelector(`.page[data-page-number="${fromP}"]`);
+            const toPageEl = iframeDoc?.querySelector(`.page[data-page-number="${toP}"]`);
+            if (viewerContainer && toPageEl) {
+              const startScroll = fromPageEl ? fromPageEl.offsetTop : 0;
+              const endScroll = toPageEl.offsetTop;
+              viewerContainer.scrollTop = startScroll + (endScroll - startScroll) * progress;
+            }
+          } catch(err) {}
+        } else if (action === 'setBoardGlow') {
+          try {
+            const boardWrapper = document.querySelector('.chessboard-wrapper');
+            if (boardWrapper) {
+              boardWrapper.style.boxShadow = `0 0 ${payload * 30}px rgba(59, 130, 246, ${payload * 0.7}), 0 15px 45px var(--shadow-color)`;
+              boardWrapper.style.borderColor = `rgba(59, 130, 246, ${payload * 0.6})`;
+            }
+          } catch(err) {}
+        } else if (action === 'resetBoardGlow') {
+          try {
+            const boardWrapper = document.querySelector('.chessboard-wrapper');
+            if (boardWrapper) {
+              boardWrapper.style.boxShadow = 'none';
+              boardWrapper.style.borderColor = 'var(--border-glass)';
+            }
+          } catch(err) {}
+        } else if (action === 'getDragCoords') {
+          try {
+            const pawnEl = document.querySelector('div[title="wP"]');
+            const squareE4 = document.querySelector('[data-square="e4"]');
+            if (pawnEl && squareE4) {
+              const pawnRect = pawnEl.getBoundingClientRect();
+              const e4Rect = squareE4.getBoundingClientRect();
+              window.parent.postMessage({
+                source: 'chess-study-app',
+                type: 'DRAG_COORDS',
+                payload: {
+                  startX: pawnRect.left + pawnRect.width / 2,
+                  startY: pawnRect.top + pawnRect.height / 2,
+                  endX: e4Rect.left + e4Rect.width / 2,
+                  endY: e4Rect.top + e4Rect.height / 2,
+                  svgHtml: pawnEl.querySelector('svg')?.outerHTML || ''
+                }
+              }, '*');
+            }
+          } catch(err) {}
+        } else if (action === 'animateSparePiecePress') {
+          try {
+            const pawnEl = document.querySelector('div[title="wP"]');
+            if (pawnEl) {
+              pawnEl.style.transition = 'transform 0.15s ease';
+              pawnEl.style.transform = 'scale(0.85)';
+              setTimeout(() => {
+                pawnEl.style.transform = 'scale(1)';
+              }, 150);
+            }
+          } catch(err) {}
+        } else if (action === 'landPawnAndFlash') {
+          try {
+            if (window.__chessControl) {
+              const currentPieces = window.__chessControl.boardPieces || {};
+              window.__chessControl.setBoardPieces({ ...currentPieces, [payload]: 'wP' });
+            }
+            // Trigger local flash
+            const square = document.querySelector(`[data-square="${payload}"]`);
+            if (square) {
+              const flash = document.createElement('div');
+              flash.style.position = 'absolute';
+              flash.style.inset = '0';
+              flash.style.backgroundColor = 'rgba(16, 185, 129, 0.65)';
+              flash.style.pointerEvents = 'none';
+              flash.style.zIndex = '5';
+              square.appendChild(flash);
+              flash.style.transition = 'opacity 0.8s ease-out';
+              setTimeout(() => {
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), 800);
+              }, 50);
+            }
+          } catch(err) {}
+        } else if (action === 'flashSquare') {
+          const { square: squareName, color } = payload;
+          try {
+            const square = document.querySelector(`[data-square="${squareName}"]`);
+            if (square) {
+              const flash = document.createElement('div');
+              flash.style.position = 'absolute';
+              flash.style.inset = '0';
+              flash.style.backgroundColor = color === 'green' ? 'rgba(16, 185, 129, 0.65)' : 'rgba(239, 68, 68, 0.65)';
+              flash.style.pointerEvents = 'none';
+              flash.style.zIndex = '5';
+              square.appendChild(flash);
+              flash.style.transition = 'opacity 0.8s ease-out';
+              setTimeout(() => {
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), 800);
+              }, 50);
+            }
+          } catch(err) {}
+        } else if (action === 'animateStartGameButtonPress') {
+          try {
+            const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('EMPEZAR DESDE ESTA POSICIÓN'));
+            if (btn) {
+              btn.style.transition = 'transform 0.15s ease';
+              btn.style.transform = 'scale(0.93)';
+              setTimeout(() => {
+                btn.style.transform = '';
+                if (window.__chessControl && window.__chessControl.setShowTurnModal) {
+                  window.__chessControl.setShowTurnModal(true);
+                }
+              }, 150);
+            }
+          } catch(err) {}
+        } else if (action === 'animateSelectColorWhitePress') {
+          try {
+            const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Blancas'));
+            if (btn) {
+              btn.style.transition = 'transform 0.15s ease';
+              btn.style.transform = 'scale(0.93)';
+              setTimeout(() => {
+                btn.style.transform = '';
+                if (window.__chessControl && window.__chessControl.handleSelectStartingColor) {
+                  window.__chessControl.handleSelectStartingColor('w');
+                }
+              }, 150);
+            }
+          } catch(err) {}
+        } else if (action === 'setStartButtonHighlight') {
+          try {
+            const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('EMPEZAR DESDE ESTA POSICIÓN'));
+            if (btn) {
+              if (payload) {
+                let highlight = btn.querySelector('.btn-press-highlight');
+                if (!highlight) {
+                  highlight = document.createElement('div');
+                  highlight.className = 'btn-press-highlight';
+                  highlight.style.position = 'absolute';
+                  highlight.style.inset = '-4px';
+                  highlight.style.border = '2px solid var(--accent-color)';
+                  highlight.style.borderRadius = '8px';
+                  highlight.style.pointerEvents = 'none';
+                  highlight.style.boxShadow = '0 0 12px var(--accent-color), inset 0 0 8px var(--accent-color)';
+                  highlight.style.animation = 'pulse-btn-highlight 0.8s infinite alternate';
+                  
+                  if (!document.getElementById('pulse-btn-keyframes')) {
+                    const style = document.createElement('style');
+                    style.id = 'pulse-btn-keyframes';
+                    style.innerHTML = `
+                      @keyframes pulse-btn-highlight {
+                        0% { opacity: 0.4; transform: scale(0.98); }
+                        100% { opacity: 1.0; transform: scale(1.02); }
+                      }
+                    `;
+                    document.head.appendChild(style);
+                  }
+                  btn.appendChild(highlight);
+                }
+              } else {
+                const highlight = btn.querySelector('.btn-press-highlight');
+                if (highlight) highlight.remove();
+              }
+            }
+          } catch(err) {}
+        }
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   return (
     <div className={`app-layout ${isResizing ? 'is-resizing' : ''}`}>
       {/* Settings Drawer */}

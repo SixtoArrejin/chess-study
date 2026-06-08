@@ -1,0 +1,18 @@
+[h1] CHESS STUDY
+[span] Lector de libros · Tablero de Análisis
+[span] Libro:
+[span] Ninguno cargado
+[div] MODO LIBRE: EDITOR DE TABLERO
+[span] EMPEZAR DESDE ESTA POSICIÓN
+[h3] Cargar tu propio libro PDF
+[p] Arrastra tu PDF aquí o haz click para seleccionar tu archivo de ajedrez local.
+[div] Seleccionar Archivo
+[span] ¿No tienes un libro? Comienza con los clásicos de Roberto Grau
+[span] Tomo I: Rudimentos
+[span] Roberto Grau · 14.8 MB
+[span] Tomo II: Táctica
+[span] Roberto Grau · 23.6 MB
+[span] Tomo III: Conformación de Peones
+[span] Roberto Grau · 18.0 MB
+[span] Tomo IV: Estrategia Superior
+[span] Roberto Grau · 18.4 MB

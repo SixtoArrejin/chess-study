@@ -53,6 +53,11 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
     return `chess_study_last_page_${pdfFile.name}_${pdfFile.size}`;
   }, [pdfFile]);
 
+  const localStorageKeyRef = useRef(localStorageKey);
+  useEffect(() => {
+    localStorageKeyRef.current = localStorageKey;
+  }, [localStorageKey]);
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type === 'application/pdf') setPdfFile(file);
@@ -70,7 +75,7 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
 
   // Scroll to a specific page
   const scrollToPage = (pageNum) => {
-    if (!pdfViewerApp) return;
+    if (!pdfViewerApp || !pdfViewerApp.pdfDocument || numPages === 0) return;
     const target = Math.max(1, Math.min(numPages, pageNum));
     pdfViewerApp.page = target;
     setCurrentPage(target);
@@ -144,9 +149,10 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
     setIsLoading(true);
     setLoadError(null);
     try {
-      if (pdfUrlRef.current) {
-        URL.revokeObjectURL(pdfUrlRef.current);
-      }
+      // Keep previous object URLs alive during rapid timeline seeking to avoid PDF.js ERR_FILE_NOT_FOUND
+      // if (pdfUrlRef.current) {
+      //   URL.revokeObjectURL(pdfUrlRef.current);
+      // }
       const objectUrl = URL.createObjectURL(file);
       pdfUrlRef.current = objectUrl;
       
@@ -181,6 +187,19 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
     if (!pdfViewerApp) return;
     applyZoomAndFit(pdfViewerApp, fitMode, zoomScale);
   }, [fitMode, zoomScale, pdfViewerApp, applyZoomAndFit]);
+
+  /* ===== Video Automation Hook ===== */
+  useEffect(() => {
+    if (pdfViewerApp) {
+      window.__pdfControl = {
+        pdfViewerApp,
+        setPage: (pageNum) => scrollToPage(pageNum)
+      };
+    }
+    return () => {
+      window.__pdfControl = null;
+    };
+  }, [pdfViewerApp, scrollToPage]);
 
   // Sync overflow-x styling based on fitMode to prevent horizontal scrollbars on fit-width, but allow it on zoom
   useEffect(() => {
@@ -232,7 +251,10 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
           // Configure EventBus listeners for page changes and initialization
           app.eventBus.on('pagechanging', (e) => {
             setCurrentPage(e.pageNumber);
-            localStorage.setItem(localStorageKey, String(e.pageNumber));
+            const key = localStorageKeyRef.current;
+            if (key) {
+              localStorage.setItem(key, String(e.pageNumber));
+            }
           });
 
           app.eventBus.on('scalechanging', (e) => {
@@ -250,13 +272,16 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
           const onPagesInit = () => {
             setNumPages(app.pagesCount);
             
-            // Restore last viewed page from localStorage
-            const savedPage = localStorage.getItem(localStorageKey);
-            if (savedPage) {
-              const parsed = parseInt(savedPage, 10);
-              if (parsed >= 1 && parsed <= app.pagesCount) {
-                app.page = parsed;
-                setCurrentPage(parsed);
+            // Restore last viewed page from localStorage using the mutable ref to avoid stale closure
+            const key = localStorageKeyRef.current;
+            if (key) {
+              const savedPage = localStorage.getItem(key);
+              if (savedPage) {
+                const parsed = parseInt(savedPage, 10);
+                if (parsed >= 1 && parsed <= app.pagesCount) {
+                  app.page = parsed;
+                  setCurrentPage(parsed);
+                }
               }
             }
 

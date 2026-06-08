@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Chess Study - Video Promo</title>
+    
+    <style>
+      /* --- Local font declarations --- */
+      @font-face {
+        font-family: 'Outfit';
+        font-weight: 300;
+        src: url('capture/assets/fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4W61C4E.ttf') format('truetype');
+      }
+      @font-face {
+        font-family: 'Outfit';
+        font-weight: 400;
+        src: url('capture/assets/fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4TC1C4E.ttf') format('truetype');
+      }
+      @font-face {
+        font-family: 'Outfit';
+        font-weight: 500;
+        src: url('capture/assets/fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4QK1C4E.ttf') format('truetype');
+      }
+      @font-face {
+        font-family: 'Outfit';
+        font-weight: 600;
+        src: url('capture/assets/fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4e6yC4E.ttf') format('truetype');
+      }
+      @font-face {
+        font-family: 'Outfit';
+        font-weight: 700;
+        src: url('capture/assets/fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4deyC4E.ttf') format('truetype');
+      }
+
+      /* --- Root & Reset --- */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #020308;
+        font-family: "Outfit", sans-serif;
+        color: #ffffff;
+        user-select: none;
+      }
+
+      /* --- Video Canvas Wrapper --- */
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #020308;
+      }
+
+      /* --- Intro & Outro Overlays --- */
+      .full-overlay {
+        position: absolute;
+        inset: 0;
+        background: #020308;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 1;
+      }
+
+      .intro-text-center {
+        font-size: 56px;
+        font-weight: 500;
+        text-align: center;
+        max-width: 1000px;
+        line-height: 1.4;
+        margin-top: 40px;
+        color: #ffffff;
+      }
+
+      .logo-card {
+        width: 160px;
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 32px;
+        background: #ffffff;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 255, 255, 0.1);
+        padding: 24px;
+        overflow: hidden;
+      }
+
+      .logo-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .highlight {
+        color: #60a5fa;
+        font-weight: 700;
+        text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+      }
+
+      /* --- Laptop Mockup Container --- */
+      .laptop-viewport {
+        position: absolute;
+        inset: 0;
+        perspective: 1600px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        background: radial-gradient(circle at center, #0a0f24 0%, #020308 100%);
+      }
+
+      .laptop-container {
+        position: relative;
+        width: 1540px;
+        height: 940px;
+        transform-style: preserve-3d;
+      }
+
+      /* Screen Bezel */
+      .laptop-screen {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #05070f;
+        border: 14px solid #1e2025;
+        border-radius: 24px;
+        box-shadow: 
+          0 30px 100px rgba(0, 0, 0, 0.8),
+          0 0 100px rgba(59, 130, 246, 0.15);
+        overflow: hidden;
+        transform-style: preserve-3d;
+      }
+
+      /* --- Overlay Text Box --- */
+      .overlay-text-box {
+        position: absolute;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(2, 3, 8, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 16px 36px;
+        border-radius: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        z-index: 50;
+        opacity: 0;
+        text-align: center;
+        pointer-events: none;
+      }
+
+      .overlay-text-content {
+        font-size: 38px;
+        font-weight: 600;
+        color: #ffffff;
+        letter-spacing: -0.01em;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      }
+
+      /* Mate Banner Badge */
+      .mate-badge {
+        position: absolute;
+        top: 430px;
+        left: 620px;
+        width: 300px;
+        height: 80px;
+        transform: scale(0.6);
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+        z-index: 80;
+        opacity: 0;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Float clone for drag and drop simulation */
+      #parent-floating-pawn {
+        position: absolute;
+        width: 62.5px;
+        height: 62.5px;
+        pointer-events: none;
+        opacity: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="45" data-width="1920" data-height="1080">
+      
+      <!-- ================= SCENE 1: APERTURA (0:00 - 0:05) ================= -->
+      <div id="intro-overlay" class="full-overlay clip" data-start="0" data-duration="5" data-track-index="1">
+        <div id="intro-logo-card" class="logo-card">
+          <img src="assets/logo.png" alt="Chess Study Logo" />
+        </div>
+        <div id="intro-text" class="intro-text-center">
+          <span style="font-weight: 700; color: #ffffff; display: block; margin-bottom: 12px; background: linear-gradient(135deg, #ffffff 0%, #d1d5db 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">El puente perfecto<br/>entre tus PDFs y el tablero.</span>
+          <span style="font-weight: 300; font-size: 34px; color: #9ca3af; display: block; letter-spacing: 0.02em;">Leé, editá y analizá en una sola pantalla.</span>
+        </div>
+      </div>
+
+      <!-- ================= MAIN WEB APP / LAPTOP VIEWPORT (0:05 - 0:41.5) ================= -->
+      <div id="laptop-scene" class="laptop-viewport clip" data-start="5" data-duration="36.5" data-track-index="2">
+        <div class="laptop-container" id="laptop-container-id">
+          <!-- Screen Bezel -->
+          <div class="laptop-screen" data-layout-allow-overflow>
+            <!-- Iframe loaded dynamically to support live-reloading or static fallback -->
+            <iframe id="app-iframe" style="width: 100%; height: 100%; border: none; background: #020308;"></iframe>
+            
+            <!-- Float clone for drag and drop simulation -->
+            <div id="parent-floating-pawn"></div>
+
+            <!-- Mate Banner Badge -->
+            <div class="mate-badge" id="mate-banner" data-layout-allow-overflow></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SCENE 3: CIERRE (40.8s - 45s) ================= -->
+      <div id="outro-overlay" class="full-overlay clip" data-start="40.8" data-duration="4.2" data-track-index="3">
+        <div id="outro-logo-card" class="logo-card">
+          <img src="assets/logo.png" alt="Chess Study Logo" />
+        </div>
+        <div id="outro-title" style="font-size: 72px; font-weight: 700; margin-top: 18px; color: #ffffff; letter-spacing: 0.03em; text-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          Chess Study
+        </div>
+        <div id="outro-subtitle" style="font-size: 32px; font-weight: 300; color: #9ca3af; margin-top: 8px; letter-spacing: 0.02em;">
+          Mejorá tu juego hoy.
+        </div>
+        <div id="outro-url" style="font-size: 24px; font-weight: 600; color: #60a5fa; margin-top: 36px; padding: 10px 24px; background: rgba(96, 165, 250, 0.08); border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 20px; letter-spacing: 0.05em; font-family: 'JetBrains Mono', monospace; box-shadow: 0 0 20px rgba(96, 165, 250, 0.05);">
+          my-chess-study.vercel.app
+        </div>
+      </div>
+
+      <!-- ================= TEXT OVERLAY BANNER ================= -->
+      <div class="overlay-text-box" id="overlay-banner">
+        <div class="overlay-text-content" id="overlay-banner-text">Tu biblioteca y tu tablero. En una sola pantalla.</div>
+      </div>
+
+    </div>
+
+    <!-- GSAP Animation Library -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+
+    <!-- Orchestrator Timeline Script -->
+    <script>
+      const iframe = document.getElementById('app-iframe');
+
+      // Autodetect dev server (port 5173) or static build fallback
+      fetch('http://localhost:5173/favicon.png', { mode: 'no-cors' })
+        .then(() => {
+          console.log("Vite dev server detected on port 5173. Using hot reloading.");
+          iframe.src = "http://localhost:5173/?video=true";
+        })
+        .catch(() => {
+          console.log("Vite dev server not running. Falling back to local static build.");
+          iframe.src = "app/index.html?video=true";
+        });
+
+      // Helper to send message commands to cross-origin iframe
+      function sendCommand(target, action, payload = null) {
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage({
+            source: 'hyperframes-video',
+            target: target,
+            action: action,
+            payload: payload
+          }, '*');
+        }
+      }
+
+      // Keep track of coordinates for drag and drop
+      window.pawnDragCoords = null;
+
+      // Handle message responses from the iframe
+      window.addEventListener('message', (e) => {
+        if (e.data && e.data.source === 'chess-study-app') {
+          if (e.data.type === 'DRAG_COORDS') {
+            window.pawnDragCoords = e.data.payload;
+            
+            // Set up clone graphics
+            const cloneContainer = document.getElementById('parent-floating-pawn');
+            if (cloneContainer && window.pawnDragCoords.svgHtml) {
+              cloneContainer.innerHTML = window.pawnDragCoords.svgHtml;
+            }
+          }
+        }
+      });
+
+      // --- Initialize GSAP and setup timeline ---
+      // Set initial CSS state for laptop-container in GSAP to avoid conflict with static stylesheet transforms - starts angled right
+      gsap.set(".laptop-container", { scale: 0.88, rotationX: 11, rotationY: 7, opacity: 0 });
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+
+      // ==========================================
+      // [0:00 - 0:05] BEAT 1: APERTURA
+      // ==========================================
+      tl.set("#intro-overlay", { opacity: 1 }, 0);
+      tl.set("#outro-overlay", { opacity: 0 }, 0);
+      tl.fromTo("#intro-logo-card", { scale: 1.6, opacity: 0 }, { scale: 1.0, opacity: 1, duration: 1.2, ease: "power3.out" }, 0.2);
+      tl.fromTo("#intro-text", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 1.0, ease: "power2.out" }, 1.3);
+      
+      // Outro / transition of Apertura
+      tl.to("#intro-logo-card", { scale: 0.9, opacity: 0, duration: 0.6, ease: "power2.in" }, 3.8);
+      tl.to("#intro-text", { y: -20, opacity: 0, duration: 0.6, ease: "power2.in" }, 3.8);
+      tl.to("#intro-overlay", { opacity: 0, duration: 0.6, ease: "power2.in" }, 4.3);
+
+      // Auto-load book at 0.5s in background and reset board to starting position in editor mode
+      tl.call(() => {
+        sendCommand('app', 'loadBook');
+        sendCommand('app', 'setTheme', 'light');
+        sendCommand('app', 'setBoardTheme', 'classic');
+        sendCommand('app', 'setLayoutInverted', false);
+        sendCommand('app', 'setIsSettingsOpen', false);
+        sendCommand('chess', 'setIsGameMode', false);
+        sendCommand('chess', 'setBoardPieces', {
+          a1: 'wR', b1: 'wN', c1: 'wB', d1: 'wQ', e1: 'wK', f1: 'wB', g1: 'wN', h1: 'wR',
+          a2: 'wP', b2: 'wP', c2: 'wP', d2: 'wP', e2: 'wP', f2: 'wP', g2: 'wP', h2: 'wP',
+          a8: 'bR', b8: 'bN', c8: 'bB', d8: 'bQ', e8: 'bK', f8: 'bB', g8: 'bN', h8: 'bR',
+          a7: 'bP', b7: 'bP', c7: 'bP', d7: 'bP', e7: 'bP', f7: 'bP', g7: 'bP', h7: 'bP'
+        });
+      }, null, 0.5);
+
+      // ==========================================
+      // [0:05 - 0:15] BEAT 2: LAYOUT DIVIDIDO
+      // ==========================================
+      // Reveal screen (fromTo is exempt from transform conflict rule) - starts angled right
+      tl.fromTo(".laptop-container", 
+        { scale: 0.4, rotationX: 45, rotationY: 35, opacity: 0 }, 
+        { scale: 0.88, rotationX: 11, rotationY: 7, opacity: 1, duration: 1.6, ease: "power3.out" }, 
+        5.0
+      );
+
+      // Slow Y-angle tilt drift (from 7 to 2 degrees) during scroll
+      tl.to(".laptop-container", { rotationY: 2, duration: 8.4, ease: "none" }, 6.6);
+
+      // Text overlay
+      tl.set("#overlay-banner-text", { innerHTML: 'Tu bibliografía y tu tablero. <span class="highlight">En una sola pantalla.</span>' }, 5.8);
+      tl.to("#overlay-banner", { opacity: 1, y: -20, duration: 0.5, ease: "power3.out" }, 5.8);
+      tl.to("#overlay-banner", { opacity: 0, y: -40, duration: 0.4, ease: "power2.in" }, 13.9);
+
+      // Set PDF initial page 1 (printed page 80 of the cropped PDF)
+      tl.call(() => {
+        sendCommand('pdf', 'setPage', 1);
+      }, null, 5.0);
+
+      // Programmatic scroll down on PDF from 7.0s to 14.8s (just before chessboard zoom)
+      tl.to({}, {
+        duration: 7.8,
+        onUpdate: function() {
+          const progress = this.progress();
+          const easeProgress = gsap.parseEase("power1.inOut")(progress);
+          sendCommand('app', 'scrollToPageProgress', { fromPage: 1, toPage: 5, progress: easeProgress });
+        }
+      }, 7.0);
+
+      // Sync page counter inputs sequentially mid-scroll
+      tl.call(() => { sendCommand('pdf', 'setPage', 2); }, null, 9.0);
+      tl.call(() => { sendCommand('pdf', 'setPage', 3); }, null, 11.0);
+      tl.call(() => { sendCommand('pdf', 'setPage', 4); }, null, 13.0);
+      tl.call(() => { sendCommand('pdf', 'setPage', 5); }, null, 14.5);
+
+      // Board glow highlight at 11.2s
+      tl.to({}, {
+        duration: 0.5,
+        onUpdate: function() {
+          sendCommand('app', 'setBoardGlow', this.progress());
+        }
+      }, 11.2);
+
+      tl.to({}, {
+        duration: 0.6,
+        onUpdate: function() {
+          sendCommand('app', 'setBoardGlow', 1 - this.progress());
+        }
+      }, 13.8);
+
+      // Animate splitter bar moving to the right from 14.0s to 15.0s (less sliding, from 45% to 53.5%)
+      tl.to({}, {
+        duration: 1.0,
+        onUpdate: function() {
+          const progress = this.progress();
+          const easeProgress = gsap.parseEase("power2.inOut")(progress);
+          const pct = 45 + (53.5 - 45) * easeProgress;
+          sendCommand('app', 'setLeftWidthPercent', pct);
+        }
+      }, 14.0);
+
+      // ==========================================
+      // [0:15 - 0:25] BEAT 3: MODO EDICIÓN
+      // ==========================================
+      // Camera Zooms into Left Panel (Chessboard) - Adjusted for panel width (53.5%) and to show bottom controls
+      tl.to(".laptop-container", { 
+        scale: 1.32, 
+        x: 235, 
+        y: -85, 
+        rotationX: 0, 
+        rotationY: 0, 
+        duration: 1.4, 
+        ease: "power3.inOut" 
+      }, 15.0);
+
+      // Change indicators to edit mode
+      tl.call(() => {
+        sendCommand('chess', 'setIsGameMode', false);
+        sendCommand('chess', 'setBoardPieces', {
+          a1: 'wR', c3: 'wN', c4: 'wB', e1: 'wK', d1: 'wQ', f3: 'wN', h1: 'wR',
+          a2: 'wP', b2: 'wP', c2: 'wP', d2: 'wP', f2: 'wP', g2: 'wP', h2: 'wP',
+          a8: 'bR', c6: 'bN', g4: 'bB', d8: 'bQ', e8: 'bK', h8: 'bR',
+          a7: 'bP', b7: 'bP', c7: 'bP', d6: 'bP', e5: 'bP', f7: 'bP', g6: 'bP', h7: 'bP'
+        });
+      }, null, 16.4);
+
+      // Trigger coordinates measuring inside the iframe
+      tl.call(() => {
+        sendCommand('app', 'getDragCoords');
+      }, null, 16.5);
+
+      // Text overlay
+      tl.set("#overlay-banner-text", { innerHTML: 'Recreá posiciones de los libros en segundos con el <span class="highlight">modo de edición libre</span>.' }, 16.5);
+      tl.to("#overlay-banner", { opacity: 1, y: -20, duration: 0.5, ease: "power3.out" }, 16.5);
+      tl.to("#overlay-banner", { opacity: 0, y: -40, duration: 0.4, ease: "power2.in" }, 24.1);
+
+      // Setup floating pawn clone coordinates
+      tl.call(() => {
+        if (window.pawnDragCoords) {
+          gsap.set("#parent-floating-pawn", {
+            left: window.pawnDragCoords.startX + "px",
+            top: window.pawnDragCoords.startY + "px",
+            xPercent: -50,
+            yPercent: -50,
+            opacity: 0,
+            scale: 0.8
+          });
+          sendCommand('chess', 'setSelectedBrush', 'wP');
+        }
+      }, null, 18.0);
+
+      // Press/click animation on the spare piece
+      tl.call(() => {
+        sendCommand('app', 'animateSparePiecePress', 'wP');
+      }, null, 18.3);
+
+      // Lift Pawn
+      tl.to("#parent-floating-pawn", { opacity: 1, scale: 1.25, duration: 0.3, ease: "power2.out" }, 18.45);
+
+      // Drag/Translate to e4 square
+      tl.to("#parent-floating-pawn", {
+        left: () => window.pawnDragCoords ? window.pawnDragCoords.endX + "px" : "50%",
+        top: () => window.pawnDragCoords ? window.pawnDragCoords.endY + "px" : "50%",
+        duration: 1.3,
+        ease: "power2.inOut"
+      }, 18.85);
+
+      // Drop Pawn
+      tl.to("#parent-floating-pawn", { scale: 0.9, opacity: 0, duration: 0.22 }, 20.15);
+
+      // Land on e4 & trigger flash
+      tl.call(() => {
+        sendCommand('app', 'landPawnAndFlash', 'e4');
+      }, null, 20.15);
+
+      // Visual button clicks for turn selection
+      tl.call(() => {
+        sendCommand('app', 'animateStartGameButtonPress');
+      }, null, 21.3);
+
+      tl.call(() => {
+        sendCommand('app', 'animateSelectColorWhitePress');
+      }, null, 23.3);
+
+      // ==========================================
+      // [0:25 - 0:35] BEAT 4: MODO ANÁLISIS
+      // ==========================================
+      // Initialise game state for Légal Mate
+      tl.call(() => {
+        const startFen = "r2qkb1r/ppp2p1p/2np2p1/4p3/2B1P1b1/2N2N2/PPPP1PPP/R2QK2R w KQkq - 0 5";
+        const fens = [
+          startFen,
+          "r2qkb1r/ppp2p1p/2np2p1/4N3/2B1P1b1/2N5/PPPP1PPP/R2QK2R b KQkq - 0 5", // Nxe5
+          "r2qkb1r/ppp2p1p/2np2p1/4N3/2B1P3/2N5/PPPP1PPP/R2bK2R w KQkq - 0 6", // Bxd1
+          "r2qkb1r/ppp2B1p/2np2p1/4N3/4P3/2N5/PPPP1PPP/R2bK2R b KQkq - 0 6", // Bxf7+
+          "r2q1b1r/ppp1kB1p/2np2p1/4N3/4P3/2N5/PPPP1PPP/R2bK2R w KQkq - 1 7", // Ke7
+          "r2q1b1r/ppp1kB1p/2np2p1/3N4/4P3/8/PPPP1PPP/R2bK2R b KQkq - 2 7" // Nd5#
+        ];
+        const moves = ["Nxe5", "Bxd1", "Bxf7+", "Ke7", "Nd5#"];
+        
+        sendCommand('chess', 'setIsGameMode', true);
+        sendCommand('chess', 'setFenHistory', fens);
+        sendCommand('chess', 'setHistoryIndex', 0);
+        sendCommand('chess', 'setMoveList', moves);
+      }, null, 25.4);
+
+      // Text overlay
+      tl.set("#overlay-banner-text", { innerHTML: 'Cambia al <span class="highlight">modo de análisis</span> para estudiar tus variantes sin perder la página.' }, 25.8);
+      tl.to("#overlay-banner", { opacity: 1, y: -20, duration: 0.5, ease: "power3.out" }, 25.8);
+      tl.to("#overlay-banner", { opacity: 0, y: -40, duration: 0.4, ease: "power2.in" }, 34.1);
+
+      // Checkmate Banner visual feedback
+      tl.fromTo("#mate-banner", 
+        { scale: 0.6, opacity: 0 }, 
+        { scale: 1.0, opacity: 1, duration: 0.5, ease: "elastic.out(1.1, 0.6)" }, 
+        33.6
+      );
+      
+      tl.to("#mate-banner", { opacity: 0, scale: 0.8, duration: 0.4 }, 34.6);
+
+      // Timeline frame listener for exact chess history sync, theme switches, and settings menu drawer (works forwards and backwards!)
+      tl.eventCallback("onUpdate", () => {
+        const time = tl.time();
+        
+        // --- 0. Mate Banner Text Sync ---
+        const banner = document.getElementById('mate-banner');
+        if (banner) {
+          const expectedBannerText = (time >= 33.6 && time < 35.0) ? 'Jaque Mate' : '';
+          if (banner.textContent !== expectedBannerText) {
+            banner.textContent = expectedBannerText;
+          }
+        }
+        
+        // --- 1. Mode & Theme States Sync ---
+        // Open settings drawer between 35.5s and 38.3s
+        const expectedSettingsOpen = (time >= 35.5 && time < 38.3);
+        if (window.__lastSettingsOpen !== expectedSettingsOpen) {
+          sendCommand('app', 'setIsSettingsOpen', expectedSettingsOpen);
+          window.__lastSettingsOpen = expectedSettingsOpen;
+        }
+        
+        // Theme sync (Dark Mode and Ocean board activated at 36.8s)
+        const expectedTheme = (time >= 36.8) ? 'dark' : 'light';
+        const expectedBoardTheme = (time >= 36.8) ? 'ocean' : 'classic';
+        if (window.__lastTheme !== expectedTheme) {
+          sendCommand('app', 'setTheme', expectedTheme);
+          sendCommand('app', 'setBoardTheme', expectedBoardTheme);
+          window.__lastTheme = expectedTheme;
+        }
+
+        // Splitter width sync (moves from 45% to 53.5% between 14.0s and 15.0s)
+        if (time < 14.0) {
+          if (window.__lastLeftWidth !== 45) {
+            sendCommand('app', 'setLeftWidthPercent', 45);
+            window.__lastLeftWidth = 45;
+          }
+        } else if (time >= 15.0) {
+          if (window.__lastLeftWidth !== 53.5) {
+            sendCommand('app', 'setLeftWidthPercent', 53.5);
+            window.__lastLeftWidth = 53.5;
+          }
+        } else {
+          // Inside transition, let timeline's onUpdate do it, but clear cache
+          window.__lastLeftWidth = null;
+        }
+
+        // --- 2. Chess States & Moves Sync ---
+        // Mode switch (Free Editor vs Game Mode)
+        // Starts in Free Edit Mode, enters Game Mode after selecting color in turn modal (23.45s)
+        const expectedGameMode = (time >= 23.45);
+        if (window.__lastGameMode !== expectedGameMode) {
+          sendCommand('chess', 'setIsGameMode', expectedGameMode);
+          window.__lastGameMode = expectedGameMode;
+        }
+
+        // Turn selection modal sync (open between clicking start game and selecting color)
+        const expectedTurnModalOpen = (time >= 21.45 && time < 23.45);
+        if (window.__lastTurnModalOpen !== expectedTurnModalOpen) {
+          sendCommand('chess', 'setShowTurnModal', expectedTurnModalOpen);
+          window.__lastTurnModalOpen = expectedTurnModalOpen;
+        }
+
+        // Start Game Button outline highlight sync
+        const expectedStartButtonHighlight = (time >= 21.0 && time < 23.0);
+        if (window.__lastStartButtonHighlight !== expectedStartButtonHighlight) {
+          sendCommand('app', 'setStartButtonHighlight', expectedStartButtonHighlight);
+          window.__lastStartButtonHighlight = expectedStartButtonHighlight;
+        }
+
+        // Moves playback
+        if (expectedGameMode) {
+          let expectedIndex = 0;
+          if (time >= 32.9) expectedIndex = 5;
+          else if (time >= 31.6) expectedIndex = 4;
+          else if (time >= 30.2) expectedIndex = 3;
+          else if (time >= 28.4) expectedIndex = 2;
+          else if (time >= 26.4) expectedIndex = 1;
+          else if (time >= 25.4) expectedIndex = 0;
+          else expectedIndex = 0; // between 23.45s and 25.4s
+          
+          if (window.__lastHistoryIndex !== expectedIndex) {
+            sendCommand('chess', 'navigateTo', expectedIndex);
+            window.__lastHistoryIndex = expectedIndex;
+            
+            // Trigger square flashes on step entries
+            if (expectedIndex === 1) { sendCommand('app', 'flashSquare', { square: 'f3', color: 'green' }); sendCommand('app', 'flashSquare', { square: 'e5', color: 'green' }); }
+            else if (expectedIndex === 2) { sendCommand('app', 'flashSquare', { square: 'g4', color: 'red' }); sendCommand('app', 'flashSquare', { square: 'd1', color: 'red' }); }
+            else if (expectedIndex === 3) { sendCommand('app', 'flashSquare', { square: 'c4', color: 'green' }); sendCommand('app', 'flashSquare', { square: 'f7', color: 'green' }); }
+            else if (expectedIndex === 4) { sendCommand('app', 'flashSquare', { square: 'e8', color: 'red' }); sendCommand('app', 'flashSquare', { square: 'e7', color: 'red' }); }
+            else if (expectedIndex === 5) { sendCommand('app', 'flashSquare', { square: 'c3', color: 'green' }); sendCommand('app', 'flashSquare', { square: 'd5', color: 'green' }); }
+          }
+        } else {
+          window.__lastHistoryIndex = null;
+        }
+      });
+
+      // ==========================================
+      // [0:35 - 0:40] BEAT 5: PERSONALIZACIÓN
+      // ==========================================
+      // Zoom out to normal laptop viewport scale - mirrors starting Y-rotation
+      tl.to(".laptop-container", { 
+        scale: 0.88, 
+        x: 0, 
+        y: 0, 
+        rotationX: 11, 
+        rotationY: -7, // mirrored angle!
+        duration: 1.0, 
+        ease: "power3.inOut" 
+      }, 35.0);
+
+      // ==========================================
+      // [0:40 - 0:45] BEAT 6: CIERRE
+      // ==========================================
+      // Scale out and fade laptop UI into dark background - exits to mirrored Y-rotation
+      tl.to(".laptop-container", { 
+        scale: 0.25, 
+        rotationX: -25, 
+        rotationY: -35, // mirrored Y-rotation
+        opacity: 0, 
+        duration: 1.4, 
+        ease: "power3.in" 
+      }, 40.0);
+      
+      // Reveal outro overlay background
+      tl.set("#outro-overlay", { opacity: 1 }, 40.8);
+
+      // Reveal Outro elements using target ID of logo card
+      tl.fromTo("#outro-logo-card", { scale: 0.7, opacity: 0 }, { scale: 1.0, opacity: 1, duration: 0.9, ease: "power3.out" }, 41.2);
+      tl.fromTo("#outro-title", { y: 25, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, 41.5);
+      tl.fromTo("#outro-subtitle", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, 41.8);
+      tl.fromTo("#outro-url", { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, 42.1);
+    </script>
+  </body>
+</html>

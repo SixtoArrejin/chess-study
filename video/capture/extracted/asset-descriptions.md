@@ -1,0 +1,42 @@
+# Asset Descriptions
+
+One line per file. Read this instead of opening every image individually.
+
+- chess-study-logo.png — 1734KB, chess study logo
+- favicon.png — 43KB, favicon
+- svgs/icon-10.svg — icon: icon 10
+- svgs/icon-11.svg — icon: icon 11
+- svgs/icon-12.svg — icon: icon 12
+- svgs/icon-13.svg — icon: icon 13
+- svgs/icon-14.svg — icon: icon 14
+- svgs/icon-15.svg — icon: icon 15
+- svgs/icon-16.svg — icon: icon 16
+- svgs/icon-17.svg — icon: icon 17
+- svgs/icon-18.svg — icon: icon 18
+- svgs/icon-19.svg — icon: icon 19
+- svgs/icon-20.svg — icon: icon 20
+- svgs/icon-21.svg — icon: icon 21
+- svgs/icon-22.svg — icon: icon 22
+- svgs/icon-23.svg — icon: icon 23
+- svgs/icon-24.svg — icon: icon 24
+- svgs/icon-25.svg — icon: icon 25
+- svgs/icon-26.svg — icon: icon 26
+- svgs/icon-27.svg — icon: icon 27
+- svgs/icon-28.svg — icon: icon 28
+- svgs/icon-29.svg — icon: icon 29
+- svgs/icon-3.svg — icon: icon 3
+- svgs/icon-4.svg — icon: icon 4
+- svgs/icon-5.svg — icon: icon 5
+- svgs/icon-6.svg — icon: icon 6
+- svgs/icon-7.svg — icon: icon 7
+- svgs/icon-8.svg — icon: icon 8
+- svgs/lucide-book-open.svg — icon: lucide-book-open
+- svgs/lucide-settings.svg — icon: lucide-settings
+- svgs/lucide-settings2.svg — icon: lucide-settings
+- svgs/lucide-trash2.svg — icon: lucide-trash2
+- fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4bC1C4E.ttf — font file
+- fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4deyC4E.ttf — font file
+- fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4e6yC4E.ttf — font file
+- fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4QK1C4E.ttf — font file
+- fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4TC1C4E.ttf — font file
+- fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4W61C4E.ttf — font file

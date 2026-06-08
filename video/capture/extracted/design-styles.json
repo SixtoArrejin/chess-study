@@ -1,0 +1,136 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "Outfit",
+      "fontSize": "13px",
+      "fontWeight": "800",
+      "lineHeight": "14.3px",
+      "letterSpacing": "1.56px",
+      "color": "#10192D",
+      "sampleText": "CHESS STUDY"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "Outfit",
+      "fontSize": "12px",
+      "fontWeight": "700",
+      "lineHeight": "18px",
+      "letterSpacing": "0.72px",
+      "color": "#10192D",
+      "sampleText": "Cargar tu propio libro PDF"
+    },
+    {
+      "role": "body",
+      "fontFamily": "Outfit",
+      "fontSize": "10px",
+      "fontWeight": "400",
+      "lineHeight": "14px",
+      "letterSpacing": "normal",
+      "color": "#435670",
+      "sampleText": "Arrastra tu PDF aquí o haz click para seleccionar tu archivo"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      4,
+      6,
+      8,
+      12,
+      14,
+      16,
+      24
+    ],
+    "baseUnit": 4
+  },
+  "radius": [
+    "6px",
+    "8px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0.1) 0px 8px 32px 0px",
+      "count": 6
+    },
+    {
+      "value": "rgba(30, 64, 175, 0.25) 0px 4px 14px 0px",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "button",
+      "background": "#FFFFFF",
+      "color": "#10192D",
+      "padding": "0px",
+      "borderRadius": "50%",
+      "border": "1px solid rgba(0, 0, 0, 0.08)",
+      "boxShadow": "none",
+      "fontSize": "12.8px",
+      "fontWeight": "600",
+      "height": "36px"
+    },
+    {
+      "label": "button",
+      "background": "#000000",
+      "color": "#6B7C94",
+      "padding": "4px",
+      "borderRadius": "6px",
+      "border": "0px none rgb(107, 124, 148)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "24px"
+    },
+    {
+      "label": "button",
+      "background": "#000000",
+      "color": "#EF4343",
+      "padding": "0px",
+      "borderRadius": "6px",
+      "border": "1px solid rgba(0, 0, 0, 0.08)",
+      "boxShadow": "none",
+      "fontSize": "12.8px",
+      "fontWeight": "600",
+      "height": "38px"
+    },
+    {
+      "label": "button",
+      "background": "#FFFFFF",
+      "color": "#10192D",
+      "padding": "0px",
+      "borderRadius": "8px",
+      "border": "1px solid rgba(0, 0, 0, 0.08)",
+      "boxShadow": "none",
+      "fontSize": "12.8px",
+      "fontWeight": "600",
+      "height": "32px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#000000",
+      "color": "#10192D",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px solid rgb(16, 25, 45)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "1024px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "#FFFFFF",
+    "color": "#10192D",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "none",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "height": "56px"
+  }
+}

@@ -117,6 +117,7 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
     localStorage.setItem('chess-study-move-list', JSON.stringify(moveList));
   }, [moveList]);
 
+
   useEffect(() => {
     if (!isGameMode || !game) return;
     if (game.isGameOver()) {
@@ -233,6 +234,27 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
     setBoardPieces(fenToPositionObject(fenHistory[historyIndex]));
     setIsGameMode(false);
   };
+
+  /* ===== Video Automation Hook ===== */
+  useEffect(() => {
+    window.__chessControl = {
+      isGameMode,
+      historyIndex,
+      boardPieces,
+      setIsGameMode,
+      setBoardPieces,
+      setSelectedBrush,
+      setFenHistory,
+      setHistoryIndex,
+      setMoveList,
+      setGame,
+      setBoardOrientation,
+      navigateTo,
+      Chess,
+      setShowTurnModal,
+      handleSelectStartingColor
+    };
+  }, [isGameMode, historyIndex, boardPieces, setIsGameMode, setBoardPieces, setSelectedBrush, setFenHistory, setHistoryIndex, setMoveList, setGame, setBoardOrientation, navigateTo, setShowTurnModal, handleSelectStartingColor]);
 
   const SPARE_PIECES_WHITE = ['wK', 'wQ', 'wR', 'wB', 'wN', 'wP'];
   const SPARE_PIECES_BLACK = ['bK', 'bQ', 'bR', 'bB', 'bN', 'bP'];
