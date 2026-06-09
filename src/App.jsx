@@ -272,25 +272,34 @@ export default function App() {
             }
           } catch(err) {}
         } else if (action === 'getDragCoords') {
-          try {
-            const pawnEl = document.querySelector('div[title="wP"]');
-            const squareE4 = document.querySelector('[data-square="e4"]');
-            if (pawnEl && squareE4) {
-              const pawnRect = pawnEl.getBoundingClientRect();
-              const e4Rect = squareE4.getBoundingClientRect();
-              window.parent.postMessage({
-                source: 'chess-study-app',
-                type: 'DRAG_COORDS',
-                payload: {
-                  startX: pawnRect.left + pawnRect.width / 2,
-                  startY: pawnRect.top + pawnRect.height / 2,
-                  endX: e4Rect.left + e4Rect.width / 2,
-                  endY: e4Rect.top + e4Rect.height / 2,
-                  svgHtml: pawnEl.querySelector('svg')?.outerHTML || ''
-                }
-              }, '*');
+          const tryMeasure = (retriesLeft = 10) => {
+            try {
+              const pawnEl = document.querySelector('div[title="wP"]');
+              const squareE4 = document.querySelector('[data-square="e4"]');
+              if (pawnEl && squareE4) {
+                const pawnRect = pawnEl.getBoundingClientRect();
+                const e4Rect = squareE4.getBoundingClientRect();
+                window.parent.postMessage({
+                  source: 'chess-study-app',
+                  type: 'DRAG_COORDS',
+                  payload: {
+                    startX: pawnRect.left + pawnRect.width / 2,
+                    startY: pawnRect.top + pawnRect.height / 2,
+                    endX: e4Rect.left + e4Rect.width / 2,
+                    endY: e4Rect.top + e4Rect.height / 2,
+                    svgHtml: pawnEl.querySelector('svg')?.outerHTML || ''
+                  }
+                }, '*');
+              } else if (retriesLeft > 0) {
+                setTimeout(() => tryMeasure(retriesLeft - 1), 50);
+              }
+            } catch(err) {
+              if (retriesLeft > 0) {
+                setTimeout(() => tryMeasure(retriesLeft - 1), 50);
+              }
             }
-          } catch(err) {}
+          };
+          tryMeasure();
         } else if (action === 'animateSparePiecePress') {
           try {
             const pawnEl = document.querySelector('div[title="wP"]');

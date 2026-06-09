@@ -101,6 +101,20 @@
         object-fit: contain;
       }
 
+      @keyframes pulseGlowIntro {
+        0%, 100% {
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 20px rgba(96, 165, 250, 0.2);
+          border: 1px solid rgba(96, 165, 250, 0.25);
+        }
+        50% {
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 45px rgba(96, 165, 250, 0.65);
+          border: 1px solid rgba(96, 165, 250, 0.5);
+        }
+      }
+      .logo-card-glow {
+        animation: pulseGlowIntro 2s ease-in-out infinite;
+      }
+
       .highlight {
         color: #60a5fa;
         font-weight: 700;
@@ -210,8 +224,11 @@
       
       <!-- ================= SCENE 1: APERTURA (0:00 - 0:05) ================= -->
       <div id="intro-overlay" class="full-overlay clip" data-start="0" data-duration="5" data-track-index="1">
-        <div id="intro-logo-card" class="logo-card">
+        <div id="intro-logo-card" class="logo-card logo-card-glow">
           <img src="assets/logo.png" alt="Chess Study Logo" />
+        </div>
+        <div id="intro-brand-name" style="font-size: 72px; font-weight: 700; margin-top: 24px; color: #ffffff; letter-spacing: 0.03em; text-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          Chess Study
         </div>
         <div id="intro-text" class="intro-text-center">
           <span style="font-weight: 700; color: #ffffff; display: block; margin-bottom: 12px; background: linear-gradient(135deg, #ffffff 0%, #d1d5db 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">El puente perfecto<br/>entre tus PDFs y el tablero.</span>
@@ -238,7 +255,7 @@
 
       <!-- ================= SCENE 3: CIERRE (40.8s - 45s) ================= -->
       <div id="outro-overlay" class="full-overlay clip" data-start="40.8" data-duration="4.2" data-track-index="3">
-        <div id="outro-logo-card" class="logo-card">
+        <div id="outro-logo-card" class="logo-card logo-card-glow">
           <img src="assets/logo.png" alt="Chess Study Logo" />
         </div>
         <div id="outro-title" style="font-size: 72px; font-weight: 700; margin-top: 18px; color: #ffffff; letter-spacing: 0.03em; text-shadow: 0 10px 30px rgba(0,0,0,0.5);">
@@ -256,6 +273,9 @@
       <div class="overlay-text-box" id="overlay-banner">
         <div class="overlay-text-content" id="overlay-banner-text">Tu biblioteca y tu tablero. En una sola pantalla.</div>
       </div>
+
+      <!-- Background Music -->
+      <audio id="bg-music" data-start="0" data-duration="45" data-track-index="4" src="assets/Architecture_of_Calm.mp3" data-volume="0.15"></audio>
 
     </div>
 
@@ -289,8 +309,68 @@
         }
       }
 
+      // Helper function to ease power2 in/out
+      function easePower2InOut(t) {
+        return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      }
+
+      // Helper to map values between ranges
+      function mapRange(value, inMin, inMax, outMin, outMax) {
+        const t = Math.max(0, Math.min(1, (value - inMin) / (inMax - inMin)));
+        return outMin + (outMax - outMin) * t;
+      }
+
       // Keep track of coordinates for drag and drop
       window.pawnDragCoords = null;
+
+      // Function to update the floating pawn position based on current timeline time
+      function updateFloatingPawn() {
+        const pawn = document.getElementById('parent-floating-pawn');
+        if (!pawn) return;
+        
+        if (typeof tl === 'undefined') return;
+        const time = tl.time();
+        
+        if (window.pawnDragCoords && time >= 18.45 && time <= 20.37) {
+          let x, y, scale, opacity;
+          
+          if (time < 18.85) {
+            // Phase 1: Lift / Scale up at start position
+            x = window.pawnDragCoords.startX;
+            y = window.pawnDragCoords.startY;
+            
+            // Scale and fade in from 18.45 to 18.75
+            const liftProgress = mapRange(time, 18.45, 18.75, 0, 1);
+            scale = 0.8 + (1.25 - 0.8) * liftProgress;
+            opacity = liftProgress;
+          } else if (time < 20.15) {
+            // Phase 2: Translate to end position
+            const dragProgress = mapRange(time, 18.85, 20.15, 0, 1);
+            const easedProgress = easePower2InOut(dragProgress);
+            
+            x = window.pawnDragCoords.startX + (window.pawnDragCoords.endX - window.pawnDragCoords.startX) * easedProgress;
+            y = window.pawnDragCoords.startY + (window.pawnDragCoords.endY - window.pawnDragCoords.startY) * easedProgress;
+            scale = 1.25;
+            opacity = 1;
+          } else {
+            // Phase 3: Drop / Scale down and fade out at end position
+            x = window.pawnDragCoords.endX;
+            y = window.pawnDragCoords.endY;
+            
+            // Scale and fade out from 20.15 to 20.37
+            const dropProgress = mapRange(time, 20.15, 20.37, 0, 1);
+            scale = 1.25 + (0.9 - 1.25) * dropProgress;
+            opacity = 1 - dropProgress;
+          }
+          
+          pawn.style.left = x + "px";
+          pawn.style.top = y + "px";
+          pawn.style.transform = `translate(-50%, -50%) scale(${scale})`;
+          pawn.style.opacity = opacity;
+        } else {
+          pawn.style.opacity = 0;
+        }
+      }
 
       // Handle message responses from the iframe
       window.addEventListener('message', (e) => {
@@ -302,7 +382,12 @@
             const cloneContainer = document.getElementById('parent-floating-pawn');
             if (cloneContainer && window.pawnDragCoords.svgHtml) {
               cloneContainer.innerHTML = window.pawnDragCoords.svgHtml;
+              
+              // Force update of position immediately on receipt (covers paused/seeking cases)
+              updateFloatingPawn();
             }
+          } else if (e.data.type === 'PDF_LOADED') {
+            window.__lastPdfPage = null; // Force sync PDF page on next frame update
           }
         }
       });
@@ -321,10 +406,12 @@
       tl.set("#intro-overlay", { opacity: 1 }, 0);
       tl.set("#outro-overlay", { opacity: 0 }, 0);
       tl.fromTo("#intro-logo-card", { scale: 1.6, opacity: 0 }, { scale: 1.0, opacity: 1, duration: 1.2, ease: "power3.out" }, 0.2);
+      tl.fromTo("#intro-brand-name", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 1.0, ease: "power2.out" }, 0.7);
       tl.fromTo("#intro-text", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 1.0, ease: "power2.out" }, 1.3);
       
       // Outro / transition of Apertura
       tl.to("#intro-logo-card", { scale: 0.9, opacity: 0, duration: 0.6, ease: "power2.in" }, 3.8);
+      tl.to("#intro-brand-name", { y: -10, opacity: 0, duration: 0.6, ease: "power2.in" }, 3.8);
       tl.to("#intro-text", { y: -20, opacity: 0, duration: 0.6, ease: "power2.in" }, 3.8);
       tl.to("#intro-overlay", { opacity: 0, duration: 0.6, ease: "power2.in" }, 4.3);
 
@@ -429,7 +516,7 @@
         sendCommand('chess', 'setBoardPieces', {
           a1: 'wR', c3: 'wN', c4: 'wB', e1: 'wK', d1: 'wQ', f3: 'wN', h1: 'wR',
           a2: 'wP', b2: 'wP', c2: 'wP', d2: 'wP', f2: 'wP', g2: 'wP', h2: 'wP',
-          a8: 'bR', c6: 'bN', g4: 'bB', d8: 'bQ', e8: 'bK', h8: 'bR',
+          a8: 'bR', c6: 'bN', g4: 'bB', d8: 'bQ', e8: 'bK', f8: 'bB', h8: 'bR',
           a7: 'bP', b7: 'bP', c7: 'bP', d6: 'bP', e5: 'bP', f7: 'bP', g6: 'bP', h7: 'bP'
         });
       }, null, 16.4);
@@ -446,37 +533,13 @@
 
       // Setup floating pawn clone coordinates
       tl.call(() => {
-        if (window.pawnDragCoords) {
-          gsap.set("#parent-floating-pawn", {
-            left: window.pawnDragCoords.startX + "px",
-            top: window.pawnDragCoords.startY + "px",
-            xPercent: -50,
-            yPercent: -50,
-            opacity: 0,
-            scale: 0.8
-          });
-          sendCommand('chess', 'setSelectedBrush', 'wP');
-        }
+        sendCommand('chess', 'setSelectedBrush', 'wP');
       }, null, 18.0);
 
       // Press/click animation on the spare piece
       tl.call(() => {
         sendCommand('app', 'animateSparePiecePress', 'wP');
       }, null, 18.3);
-
-      // Lift Pawn
-      tl.to("#parent-floating-pawn", { opacity: 1, scale: 1.25, duration: 0.3, ease: "power2.out" }, 18.45);
-
-      // Drag/Translate to e4 square
-      tl.to("#parent-floating-pawn", {
-        left: () => window.pawnDragCoords ? window.pawnDragCoords.endX + "px" : "50%",
-        top: () => window.pawnDragCoords ? window.pawnDragCoords.endY + "px" : "50%",
-        duration: 1.3,
-        ease: "power2.inOut"
-      }, 18.85);
-
-      // Drop Pawn
-      tl.to("#parent-floating-pawn", { scale: 0.9, opacity: 0, duration: 0.22 }, 20.15);
 
       // Land on e4 & trigger flash
       tl.call(() => {
@@ -504,7 +567,7 @@
           "r2qkb1r/ppp2p1p/2np2p1/4N3/2B1P3/2N5/PPPP1PPP/R2bK2R w KQkq - 0 6", // Bxd1
           "r2qkb1r/ppp2B1p/2np2p1/4N3/4P3/2N5/PPPP1PPP/R2bK2R b KQkq - 0 6", // Bxf7+
           "r2q1b1r/ppp1kB1p/2np2p1/4N3/4P3/2N5/PPPP1PPP/R2bK2R w KQkq - 1 7", // Ke7
-          "r2q1b1r/ppp1kB1p/2np2p1/3N4/4P3/8/PPPP1PPP/R2bK2R b KQkq - 2 7" // Nd5#
+          "r2q1b1r/ppp1kB1p/2np2p1/3NN3/4P3/8/PPPP1PPP/R2bK2R b KQkq - 2 7" // Nd5#
         ];
         const moves = ["Nxe5", "Bxd1", "Bxf7+", "Ke7", "Nd5#"];
         
@@ -622,6 +685,9 @@
         } else {
           window.__lastHistoryIndex = null;
         }
+
+        // --- 3. Pawn Drag Sync ---
+        updateFloatingPawn();
       });
 
       // ==========================================
