@@ -34,7 +34,7 @@ export default function App() {
   /* ========= SPLIT SCREEN STATE ========= */
   const [leftWidthPercent, setLeftWidthPercent] = useState(() => {
     const saved = localStorage.getItem('chess-study-left-width');
-    return saved ? parseFloat(saved) : 45;
+    return saved ? parseFloat(saved) : 50;
   });
   const [isResizing, setIsResizing] = useState(false);
   const panelsRef = useRef(null);
@@ -98,6 +98,7 @@ export default function App() {
   /* ========= RESIZE LOGIC ========= */
   const handleMouseMove = useCallback((e) => {
     if (!panelsRef.current) return;
+    if (e.cancelable && e.type === 'touchmove') e.preventDefault();
     const rect = panelsRef.current.getBoundingClientRect();
     const clientX = e.touches?.[0]?.clientX ?? e.clientX;
     let pct = ((clientX - rect.left) / rect.width) * 100;
@@ -115,7 +116,7 @@ export default function App() {
     if (!isResizing) return;
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('touchmove', handleMouseMove);
+    window.addEventListener('touchmove', handleMouseMove, { passive: false });
     window.addEventListener('touchend', handleMouseUp);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
@@ -126,7 +127,7 @@ export default function App() {
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
   const startResizing = (e) => {
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     setIsResizing(true);
   };
 
@@ -137,7 +138,7 @@ export default function App() {
     setBoardTheme('classic');
     setSoundEnabled(true);
     soundManager.setEnabled(true);
-    setLeftWidthPercent(45);
+    setLeftWidthPercent(50);
     localStorage.removeItem('chess-study-theme');
     localStorage.removeItem('chess-study-layout-inverted');
     localStorage.removeItem('chess-study-board-theme');
