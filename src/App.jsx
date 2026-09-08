@@ -191,7 +191,7 @@ export default function App() {
   );
 
   return (
-    <div className={`app-layout ${isResizing ? 'is-resizing' : ''}`}>
+    <div className={`app-layout ${layoutInverted ? 'layout-inverted' : ''} ${isResizing ? 'is-resizing' : ''}`}>
       {/* Settings Drawer */}
       <SettingsMenu
         isOpen={isSettingsOpen}

@@ -4,7 +4,7 @@ import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import {
   Play, Settings2, RotateCcw, Trash2, ArrowLeftRight,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  RefreshCw, AlertCircle
+  RefreshCw, AlertCircle, Maximize2, Minimize2, BrushCleaning
 } from 'lucide-react';
 import {
   positionObjectToFenPiecePlacement, fenToPositionObject,
@@ -98,6 +98,41 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
       });
     }
   }, [moveList.length, historyIndex, isGameMode]);
+
+  /* ===== Fullscreen ===== */
+  const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
+
+  useEffect(() => {
+    const onFsChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement || document.webkitFullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+      document.removeEventListener('webkitfullscreenchange', onFsChange);
+    };
+  }, []);
+
+  const handleToggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          await document.documentElement.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          await document.webkitExitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.warn('Fullscreen error:', err);
+    }
+  };
 
   const activeColors = THEME_COLORS[boardTheme] || THEME_COLORS.classic;
 
@@ -390,19 +425,44 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
         </div>
       )}
 
-      {/* ===== Mode label + settings ===== */}
+      {/* ===== Mode label + fullscreen + settings ===== */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div style={modeLabel}>
           <div style={modeDot} />
           {isGameMode ? 'MODO JUEGO Y ANÁLISIS' : 'MODO LIBRE: EDITOR DE TABLERO'}
         </div>
-        <button onClick={onOpenSettings}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--text-muted)', padding: 4, borderRadius: 6,
-          }}>
-          <Settings2 style={{ width: 16, height: 16 }} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <button
+            onClick={handleToggleFullscreen}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: isFullscreen ? 'var(--accent-color)' : 'var(--text-muted)',
+              padding: 4, borderRadius: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'color 0.15s',
+            }}
+            title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+          >
+            {isFullscreen ? (
+              <Minimize2 style={{ width: 16, height: 16 }} />
+            ) : (
+              <Maximize2 style={{ width: 16, height: 16 }} />
+            )}
+          </button>
+
+          <button onClick={onOpenSettings}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--text-muted)', padding: 4, borderRadius: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+            title="Configuración"
+            aria-label="Configuración"
+          >
+            <Settings2 style={{ width: 16, height: 16 }} />
+          </button>
+        </div>
       </div>
 
       {/* ===== Board & Side Columns (Editor) or Sidebar moves (Game) ===== */}
@@ -566,8 +626,8 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
                 <RotateCcw style={{ width: 13, height: 13 }} />
               </button>
               <button className="glass-button" onClick={() => setBoardPieces({})}
-                style={{ width: 32, height: 32, padding: 0, color: 'var(--danger-color)' }} title="Limpiar Tablero">
-                <Trash2 style={{ width: 13, height: 13 }} />
+                style={{ width: 32, height: 32, padding: 0 }} title="Limpiar Tablero">
+                <BrushCleaning style={{ width: 13, height: 13 }} />
               </button>
               <button className="glass-button"
                 onClick={() => setBoardOrientation(boardOrientation === 'white' ? 'black' : 'white')}
