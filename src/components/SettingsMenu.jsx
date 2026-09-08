@@ -1,5 +1,6 @@
 import { X, Sun, Moon, LayoutGrid, Palette, RotateCcw, Volume2, VolumeX, Settings } from 'lucide-react';
 import soundManager from '../helpers/soundHelper';
+import logo from '../assets/logo.png';
 
 const BOARD_THEMES = [
   { id: 'classic', name: 'Esmeralda', dark: '#769656', light: '#eeeed2' },
@@ -152,7 +153,7 @@ export default function SettingsMenu({
         {/* Header */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '18px 20px',
+          padding: '16px 20px',
           borderBottom: '1px solid var(--border-glass)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -165,6 +166,39 @@ export default function SettingsMenu({
           }}>
             <X style={{ width: 18, height: 18 }} />
           </button>
+        </div>
+
+        {/* App Branding Card */}
+        <div style={{
+          padding: '14px 20px',
+          borderBottom: '1px solid var(--border-glass)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          background: 'rgba(var(--accent-color-rgb), 0.04)',
+        }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: 10, overflow: 'hidden',
+            background: '#ffffff', border: '1px solid var(--border-glass)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)', flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <img src={logo} alt="Chess Study Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+          <div>
+            <h2 style={{
+              fontSize: 13, fontWeight: 800, letterSpacing: '0.12em',
+              color: 'var(--text-primary)', textTransform: 'uppercase', margin: 0, lineHeight: 1.1
+            }}>
+              CHESS STUDY
+            </h2>
+            <span style={{
+              fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.08em',
+              textTransform: 'uppercase', display: 'block', marginTop: 3
+            }}>
+              Lector de libros · Tablero de Análisis
+            </span>
+          </div>
         </div>
 
         {/* Body */}

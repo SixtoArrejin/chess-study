@@ -209,6 +209,7 @@ export default function App() {
 
       {/* ===== HEADER ===== */}
       <header
+        className="app-header-desktop"
         style={{
           height: 56,
           background: 'var(--bg-glass)',

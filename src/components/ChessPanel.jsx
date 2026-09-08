@@ -258,7 +258,7 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
 
   const renderSparePieceColumn = (piecesList, colorName) => {
     return (
-      <div className="glass-panel animate-fade-in" style={{
+      <div className="glass-panel animate-fade-in desktop-only" style={{
         display: 'flex',
         flexDirection: 'column',
         gap: 6,
@@ -320,6 +320,70 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
     );
   };
 
+  const renderSparePieceRow = (piecesList, colorName) => {
+    return (
+      <div className="glass-panel animate-fade-in mobile-only mobile-spare-row" style={{
+        display: 'flex',
+        flexDirection: 'row',
+        gap: 5,
+        padding: '3px 8px',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        borderRadius: 8,
+      }}>
+        {piecesList.map((pt) => {
+          const isActive = selectedBrush === pt;
+          return (
+            <div
+              key={pt}
+              onClick={() => handleSparePieceClick(pt)}
+              style={{
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 6,
+                border: isActive ? '2px solid var(--accent-color)' : '1px solid transparent',
+                background: isActive ? 'rgba(var(--accent-color-rgb), 0.15)' : 'transparent',
+                cursor: 'grab',
+                transition: 'all 0.15s',
+                transform: isActive ? 'scale(1.08)' : 'scale(1)',
+              }}
+              title={pt}
+            >
+              <div style={{ width: 28, height: 28 }}>
+                <SparePiece pieceType={pt} />
+              </div>
+            </div>
+          );
+        })}
+        {colorName === 'white' && (
+          <button
+            className={`glass-button ${selectedBrush === 'eraser' ? 'active' : ''}`}
+            onClick={() => setSelectedBrush(selectedBrush === 'eraser' ? null : 'eraser')}
+            style={{
+              width: 32,
+              height: 32,
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 6,
+              border: selectedBrush === 'eraser' ? '2px solid var(--danger-color)' : '1px solid var(--border-glass)',
+              background: selectedBrush === 'eraser' ? 'var(--danger-color)' : 'transparent',
+              color: selectedBrush === 'eraser' ? '#fff' : 'var(--danger-color)',
+            }}
+            title="Borrador"
+          >
+            <Trash2 style={{ width: 14, height: 14 }} />
+          </button>
+        )}
+      </div>
+    );
+  };
+
   /* ===== Styles ===== */
   const sectionStyle = { display: 'flex', flexDirection: 'column', gap: 12 };
   const modeLabel = {
@@ -344,7 +408,7 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
   }), [chessboardPosition, handlePieceDrop, handleSquareClick, boardOrientation, activeColors]);
 
   return (
-    <div style={{
+    <div className="chess-panel-container" style={{
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
@@ -404,6 +468,9 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
 
       {/* ===== Board & Side Columns (Editor) or Sidebar moves (Game) ===== */}
       <ChessboardProvider options={chessboardOptions}>
+        {/* Mobile: Black spare pieces on top (Editor mode only) */}
+        {!isGameMode && renderSparePieceRow(SPARE_PIECES_BLACK, 'black')}
+
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -413,9 +480,9 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
           flex: '1 1 auto',
           minHeight: 0,
         }}>
-          {/* Left Column (Editor: White pieces, Game: Move notation column) */}
+          {/* Left Column (Editor: White pieces, Game: Move notation column) - Desktop only */}
           {isGameMode ? (
-            <div className="glass-panel animate-fade-in" style={{
+            <div className="glass-panel animate-fade-in desktop-only" style={{
               width: 120,
               display: 'flex',
               flexDirection: 'column',
@@ -484,9 +551,59 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
             <Chessboard {...chessboardOptions} />
           </div>
 
-          {/* Right Column: Black pieces (Editor mode only) */}
+          {/* Right Column: Black pieces (Editor mode only) - Desktop only */}
           {!isGameMode && renderSparePieceColumn(SPARE_PIECES_BLACK, 'black')}
         </div>
+
+        {/* Mobile: White spare pieces on bottom (Editor mode only) */}
+        {!isGameMode && renderSparePieceRow(SPARE_PIECES_WHITE, 'white')}
+
+        {/* Mobile: Move history tape in Game mode */}
+        {isGameMode && (
+          <div className="glass-panel animate-fade-in mobile-only" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            padding: '3px 8px',
+            overflowX: 'auto',
+            width: '100%',
+            maxWidth: 'min(92vw, 360px)',
+            margin: '0 auto',
+            borderRadius: 8,
+            minHeight: 28,
+            flexShrink: 0,
+          }}>
+            {moveList.length === 0 ? (
+              <div style={{ fontSize: 9, color: 'var(--text-muted)', fontStyle: 'italic', padding: '2px 4px' }}>
+                Sin jugadas aún
+              </div>
+            ) : (
+              moveList.map((moveSan, idx) => {
+                const isWhite = idx % 2 === 0;
+                const moveNum = Math.floor(idx / 2) + 1;
+                const isCurrent = historyIndex === idx + 1;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => navigateTo(idx + 1)}
+                    className={`glass-button ${isCurrent ? 'active' : ''}`}
+                    style={{
+                      padding: '2px 6px',
+                      fontSize: 9,
+                      height: 22,
+                      borderRadius: 4,
+                      flexShrink: 0,
+                      gap: 2,
+                    }}
+                  >
+                    {isWhite && <span style={{ opacity: 0.6 }}>{moveNum}.</span>}
+                    <span>{moveSan}</span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        )}
       </ChessboardProvider>
 
       {/* ===== Bottom Controls (Editor Mode) ===== */}
@@ -540,7 +657,8 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
                 alignItems: 'center',
               }}>
               <Play style={{ width: 10, height: 10, fill: 'currentColor', transform: 'translateY(0.5px)' }} />
-              <span>EMPEZAR DESDE ESTA POSICIÓN</span>
+              <span className="desktop-only">EMPEZAR DESDE ESTA POSICIÓN</span>
+              <span className="mobile-only">EMPEZAR PARTIDA</span>
             </button>
           </div>
         </div>
