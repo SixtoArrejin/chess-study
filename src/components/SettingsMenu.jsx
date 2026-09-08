@@ -1,5 +1,5 @@
-import React from 'react';
 import { X, Sun, Moon, LayoutGrid, Palette, RotateCcw, Volume2, VolumeX, Settings } from 'lucide-react';
+import soundManager from '../helpers/soundHelper';
 
 const BOARD_THEMES = [
   { id: 'classic', name: 'Esmeralda', dark: '#769656', light: '#eeeed2' },
@@ -9,6 +9,96 @@ const BOARD_THEMES = [
   { id: 'cyberpunk', name: 'Cyberpunk', dark: '#4a1259', light: '#ff75c3' },
   { id: 'slate', name: 'Pizarra', dark: '#374151', light: '#e5e7eb' },
 ];
+
+function SwitchRow({ icon: Icon, iconColor, title, subtitle, checked, onToggle }) {
+  return (
+    <div
+      onClick={onToggle}
+      className="glass-panel"
+      role="switch"
+      aria-checked={checked}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 14px',
+        cursor: 'pointer',
+        userSelect: 'none',
+        borderRadius: 10,
+        transition: 'all 0.2s',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          background: checked ? 'rgba(var(--accent-color-rgb), 0.15)' : 'rgba(120, 120, 128, 0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'background-color 0.2s',
+          flexShrink: 0,
+        }}>
+          {Icon && (
+            <Icon style={{
+              width: 16,
+              height: 16,
+              color: iconColor || (checked ? 'var(--accent-color)' : 'var(--text-muted)'),
+              transition: 'color 0.2s'
+            }} />
+          )}
+        </div>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '0.02em' }}>
+            {title}
+          </div>
+          {subtitle && (
+            <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>
+              {subtitle}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Switch pill */}
+      <div
+        style={{
+          width: 44,
+          height: 24,
+          borderRadius: 12,
+          background: checked ? 'var(--accent-color)' : 'rgba(120, 120, 128, 0.25)',
+          border: '1px solid var(--border-glass)',
+          padding: 2,
+          display: 'flex',
+          alignItems: 'center',
+          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: checked ? '0 0 12px rgba(var(--accent-color-rgb), 0.35)' : 'none',
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            width: 18,
+            height: 18,
+            borderRadius: '50%',
+            background: '#ffffff',
+            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.28)',
+            transform: checked ? 'translateX(20px)' : 'translateX(0px)',
+            transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
 export default function SettingsMenu({
   isOpen, onClose, theme, setTheme,
@@ -26,6 +116,18 @@ export default function SettingsMenu({
     marginBottom: 10,
   };
   const iconSm = { width: 13, height: 13 };
+
+  const handleToggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleToggleSound = () => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    if (next) {
+      soundManager.playMoveSound(false);
+    }
+  };
 
   return (
     <div
@@ -66,38 +168,8 @@ export default function SettingsMenu({
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 28 }}>
-          {/* Sound */}
-          <div>
-            <div style={sectionTitle}><Volume2 style={iconSm} /> Sonido de Piezas</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <button className={`glass-button ${soundEnabled ? 'active' : ''}`}
-                onClick={() => setSoundEnabled(true)} style={{ padding: '10px 0', fontSize: 11, gap: 6 }}>
-                <Volume2 style={{ width: 14, height: 14 }} /> Activado
-              </button>
-              <button className={`glass-button ${!soundEnabled ? 'active' : ''}`}
-                onClick={() => setSoundEnabled(false)} style={{ padding: '10px 0', fontSize: 11, gap: 6 }}>
-                <VolumeX style={{ width: 14, height: 14 }} /> Silenciado
-              </button>
-            </div>
-          </div>
-
-          {/* Theme */}
-          <div>
-            <div style={sectionTitle}><Sun style={iconSm} /> Tema</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <button className={`glass-button ${theme === 'light' ? 'active' : ''}`}
-                onClick={() => setTheme('light')} style={{ padding: '10px 0', fontSize: 11 }}>
-                <Sun style={{ width: 14, height: 14 }} /> Claro
-              </button>
-              <button className={`glass-button ${theme === 'dark' ? 'active' : ''}`}
-                onClick={() => setTheme('dark')} style={{ padding: '10px 0', fontSize: 11 }}>
-                <Moon style={{ width: 14, height: 14 }} /> Oscuro
-              </button>
-            </div>
-          </div>
-
-          {/* Layout */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* 1. Layout */}
           <div>
             <div style={sectionTitle}><LayoutGrid style={iconSm} /> Distribución</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -114,7 +186,33 @@ export default function SettingsMenu({
             </div>
           </div>
 
-          {/* Board Colours */}
+          {/* 2. Theme Switch */}
+          <div>
+            <div style={sectionTitle}><Sun style={iconSm} /> Tema</div>
+            <SwitchRow
+              icon={theme === 'dark' ? Moon : Sun}
+              iconColor={theme === 'dark' ? 'var(--accent-color)' : '#f59e0b'}
+              title={theme === 'dark' ? 'Modo Oscuro' : 'Modo Claro'}
+              subtitle={theme === 'dark' ? 'Interfaz oscura activa' : 'Interfaz clara activa'}
+              checked={theme === 'dark'}
+              onToggle={handleToggleTheme}
+            />
+          </div>
+
+          {/* 3. Sound Switch */}
+          <div>
+            <div style={sectionTitle}><Volume2 style={iconSm} /> Sonido de Piezas</div>
+            <SwitchRow
+              icon={soundEnabled ? Volume2 : VolumeX}
+              iconColor={soundEnabled ? 'var(--accent-color)' : 'var(--text-muted)'}
+              title={soundEnabled ? 'Sonido Activado' : 'Sonido Silenciado'}
+              subtitle={soundEnabled ? 'Sonido típico al mover y capturar' : 'Sin efectos de sonido'}
+              checked={soundEnabled}
+              onToggle={handleToggleSound}
+            />
+          </div>
+
+          {/* 4. Board Colours */}
           <div>
             <div style={sectionTitle}><Palette style={iconSm} /> Color del Tablero</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
