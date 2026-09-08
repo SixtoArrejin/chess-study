@@ -5,6 +5,7 @@ import PdfPanel from './components/PdfPanel';
 import SettingsMenu from './components/SettingsMenu';
 import logo from './assets/logo.png';
 import { getPdfFromDB, savePdfToDB, clearPdfFromDB } from './helpers/pdfStore';
+import soundManager from './helpers/soundHelper';
 
 export default function App() {
   /* ========= SETTINGS STATE ========= */
@@ -22,6 +23,11 @@ export default function App() {
   const [boardTheme, setBoardTheme] = useState(() =>
     localStorage.getItem('chess-study-board-theme') || 'classic'
   );
+
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('chess-study-sound-enabled');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -84,6 +90,11 @@ export default function App() {
     localStorage.setItem('chess-study-board-theme', boardTheme);
   }, [boardTheme]);
 
+  useEffect(() => {
+    soundManager.setEnabled(soundEnabled);
+    localStorage.setItem('chess-study-sound-enabled', JSON.stringify(soundEnabled));
+  }, [soundEnabled]);
+
   /* ========= RESIZE LOGIC ========= */
   const handleMouseMove = useCallback((e) => {
     if (!panelsRef.current) return;
@@ -124,10 +135,13 @@ export default function App() {
     setTheme('dark');
     setLayoutInverted(false);
     setBoardTheme('classic');
+    setSoundEnabled(true);
+    soundManager.setEnabled(true);
     setLeftWidthPercent(45);
     localStorage.removeItem('chess-study-theme');
     localStorage.removeItem('chess-study-layout-inverted');
     localStorage.removeItem('chess-study-board-theme');
+    localStorage.removeItem('chess-study-sound-enabled');
     localStorage.removeItem('chess-study-left-width');
     localStorage.removeItem('chess-study-pdf-toolbar-visible');
     localStorage.removeItem('chess-study-is-game-mode');
@@ -145,7 +159,7 @@ export default function App() {
       className="left-panel"
       style={{ width: `${leftWidthPercent}%` }}
     >
-      <ChessPanel boardTheme={boardTheme} onOpenSettings={() => setIsSettingsOpen(true)} />
+      <ChessPanel boardTheme={boardTheme} soundEnabled={soundEnabled} onOpenSettings={() => setIsSettingsOpen(true)} />
     </div>
   );
 
@@ -188,6 +202,8 @@ export default function App() {
         setLayoutInverted={setLayoutInverted}
         boardTheme={boardTheme}
         setBoardTheme={setBoardTheme}
+        soundEnabled={soundEnabled}
+        setSoundEnabled={setSoundEnabled}
         onResetAll={handleResetAll}
       />
 

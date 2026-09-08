@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Sun, Moon, LayoutGrid, Palette, RotateCcw, BookOpen } from 'lucide-react';
+import { X, Sun, Moon, LayoutGrid, Palette, RotateCcw, Volume2, VolumeX, Settings } from 'lucide-react';
 
 const BOARD_THEMES = [
   { id: 'classic', name: 'Esmeralda', dark: '#769656', light: '#eeeed2' },
@@ -13,7 +13,9 @@ const BOARD_THEMES = [
 export default function SettingsMenu({
   isOpen, onClose, theme, setTheme,
   layoutInverted, setLayoutInverted,
-  boardTheme, setBoardTheme, onResetAll,
+  boardTheme, setBoardTheme,
+  soundEnabled, setSoundEnabled,
+  onResetAll,
 }) {
   if (!isOpen) return null;
 
@@ -52,8 +54,8 @@ export default function SettingsMenu({
           borderBottom: '1px solid var(--border-glass)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Palette style={{ width: 17, height: 17, color: 'var(--accent-color)' }} />
-            <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.06em' }}>AJUSTES VISUALES</span>
+            <Settings style={{ width: 17, height: 17, color: 'var(--accent-color)' }} />
+            <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.06em' }}>CONFIGURACIÓN</span>
           </div>
           <button onClick={onClose} style={{
             background: 'none', border: 'none', cursor: 'pointer',
@@ -65,6 +67,21 @@ export default function SettingsMenu({
 
         {/* Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 28 }}>
+          {/* Sound */}
+          <div>
+            <div style={sectionTitle}><Volume2 style={iconSm} /> Sonido de Piezas</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <button className={`glass-button ${soundEnabled ? 'active' : ''}`}
+                onClick={() => setSoundEnabled(true)} style={{ padding: '10px 0', fontSize: 11, gap: 6 }}>
+                <Volume2 style={{ width: 14, height: 14 }} /> Activado
+              </button>
+              <button className={`glass-button ${!soundEnabled ? 'active' : ''}`}
+                onClick={() => setSoundEnabled(false)} style={{ padding: '10px 0', fontSize: 11, gap: 6 }}>
+                <VolumeX style={{ width: 14, height: 14 }} /> Silenciado
+              </button>
+            </div>
+          </div>
+
           {/* Theme */}
           <div>
             <div style={sectionTitle}><Sun style={iconSm} /> Tema</div>

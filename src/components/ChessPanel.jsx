@@ -10,6 +10,7 @@ import {
   positionObjectToFenPiecePlacement, fenToPositionObject,
   STARTING_POSITION_OBJECT, STARTING_FEN
 } from '../helpers/chessHelpers';
+import soundManager from '../helpers/soundHelper';
 
 /* ===== Board colour presets ===== */
 const THEME_COLORS = {
@@ -21,7 +22,7 @@ const THEME_COLORS = {
   slate:     { dark: '#374151', light: '#e5e7eb' },
 };
 
-export default function ChessPanel({ boardTheme, onOpenSettings }) {
+export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings }) {
   /* ===== Mode ===== */
   const [isGameMode, setIsGameMode] = useState(() => {
     const saved = localStorage.getItem('chess-study-is-game-mode');
@@ -92,6 +93,12 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
   /* ===== Effects ===== */
   useEffect(() => { setErrorMessage(''); if (!isGameMode) setSelectedBrush(null); }, [isGameMode]);
 
+  useEffect(() => {
+    if (soundEnabled !== undefined) {
+      soundManager.setEnabled(soundEnabled);
+    }
+  }, [soundEnabled]);
+
   /* ===== Persistence Effects ===== */
   useEffect(() => {
     localStorage.setItem('chess-study-is-game-mode', JSON.stringify(isGameMode));
@@ -146,6 +153,7 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
       const p = { ...boardPieces }; delete p[square]; setBoardPieces(p);
     } else if (selectedBrush) {
       setBoardPieces({ ...boardPieces, [square]: selectedBrush });
+      soundManager.playMoveSound(false);
     }
   }, [isGameMode, selectedBrush, boardPieces]);
 
@@ -161,6 +169,7 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
 
     if (!isGameMode) {
       if (sourceSquare === targetSquare) return false;
+      const isCapture = !!boardPieces[targetSquare];
       const p = { ...boardPieces };
       delete p[sourceSquare];
       if (piece) {
@@ -168,6 +177,7 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
         p[targetSquare] = pieceStr;
       }
       setBoardPieces(p);
+      soundManager.playMoveSound(isCapture);
       return true;
     }
 
@@ -188,6 +198,7 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
       setFenHistory(newH);
       setHistoryIndex(newH.length - 1);
       setMoveList(newM);
+      soundManager.playMoveSound(!!move.captured);
       return true;
     } catch { return false; }
   }, [isGameMode, boardPieces, fenHistory, historyIndex, moveList]);
@@ -226,8 +237,11 @@ export default function ChessPanel({ boardTheme, onOpenSettings }) {
   const navigateTo = useCallback((idx) => {
     if (!isGameMode || !game) return;
     const i = Math.max(0, Math.min(fenHistory.length - 1, idx));
+    if (i !== historyIndex) {
+      soundManager.playMoveSound(false);
+    }
     setHistoryIndex(i); game.load(fenHistory[i]);
-  }, [isGameMode, game, fenHistory]);
+  }, [isGameMode, game, fenHistory, historyIndex]);
 
   const handleRevertToEditor = () => {
     setBoardPieces(fenToPositionObject(fenHistory[historyIndex]));
