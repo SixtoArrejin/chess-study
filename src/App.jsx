@@ -34,7 +34,7 @@ export default function App() {
   /* ========= SPLIT SCREEN STATE ========= */
   const [leftWidthPercent, setLeftWidthPercent] = useState(() => {
     const saved = localStorage.getItem('chess-study-left-width');
-    return saved ? parseFloat(saved) : 50;
+    return saved ? parseFloat(saved) : 45;
   });
   const [isResizing, setIsResizing] = useState(false);
   const panelsRef = useRef(null);
@@ -138,7 +138,7 @@ export default function App() {
     setBoardTheme('classic');
     setSoundEnabled(true);
     soundManager.setEnabled(true);
-    setLeftWidthPercent(50);
+    setLeftWidthPercent(45);
     localStorage.removeItem('chess-study-theme');
     localStorage.removeItem('chess-study-layout-inverted');
     localStorage.removeItem('chess-study-board-theme');
