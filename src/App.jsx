@@ -204,6 +204,8 @@ export default function App() {
         setBoardTheme={setBoardTheme}
         soundEnabled={soundEnabled}
         setSoundEnabled={setSoundEnabled}
+        pdfFile={pdfFile}
+        onSetPdfFile={handleSetPdf}
         onResetAll={handleResetAll}
       />
 

@@ -1,0 +1,18 @@
+{
+  "name": "Chess Study",
+  "short_name": "Chess Study",
+  "description": "Lector de libros de ajedrez en PDF y Tablero de Análisis interactivo",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0f1e",
+  "theme_color": "#0a0f1e",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

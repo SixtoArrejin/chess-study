@@ -334,46 +334,6 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
             flexDirection: 'column',
             background: 'var(--bg-glass)',
           }}>
-            {/* Mobile Book Header (visible solo en móviles) */}
-            <div className="mobile-book-header" style={{
-              display: 'none',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '6px 10px',
-              borderBottom: '1px solid var(--border-glass)',
-              background: 'var(--bg-glass-active)',
-              gap: 8,
-              flexShrink: 0,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
-                <BookOpen style={{ width: 13, height: 13, color: 'var(--accent-color)', flexShrink: 0 }} />
-                <span style={{
-                  fontSize: 10, fontWeight: 700, color: 'var(--text-primary)',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                }}>
-                  {pdfFile.name}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                <button
-                  className="glass-button"
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{ padding: '0 6px', height: 22, fontSize: 9, borderRadius: 4, color: 'var(--accent-color)' }}
-                  title="Cambiar Libro"
-                >
-                  <RefreshCw style={{ width: 10, height: 10 }} />
-                </button>
-                <button
-                  className="glass-button"
-                  onClick={() => setPdfFile(null)}
-                  style={{ padding: '0 6px', height: 22, fontSize: 9, borderRadius: 4, color: 'var(--danger-color)' }}
-                  title="Eliminar Libro"
-                >
-                  <Trash2 style={{ width: 10, height: 10 }} />
-                </button>
-              </div>
-            </div>
-
             {/* Toolbar */}
             <div style={{
               height: 44,

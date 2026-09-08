@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import {
@@ -73,6 +73,31 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
     const saved = localStorage.getItem('chess-study-move-list');
     return saved ? JSON.parse(saved) : [];
   });
+
+  const mobileMoveTapeRef = useRef(null);
+  const desktopNotationRef = useRef(null);
+
+  // Auto-scroll move history to active/latest move
+  useEffect(() => {
+    if (!isGameMode) return;
+    if (mobileMoveTapeRef.current) {
+      const activeEl = mobileMoveTapeRef.current.querySelector('.glass-button.active');
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+      } else {
+        mobileMoveTapeRef.current.scrollTo({
+          left: mobileMoveTapeRef.current.scrollWidth,
+          behavior: 'smooth'
+        });
+      }
+    }
+    if (desktopNotationRef.current) {
+      desktopNotationRef.current.scrollTo({
+        top: desktopNotationRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [moveList.length, historyIndex, isGameMode]);
 
   const activeColors = THEME_COLORS[boardTheme] || THEME_COLORS.classic;
 
@@ -258,38 +283,23 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
 
   const renderSparePieceColumn = (piecesList, colorName) => {
     return (
-      <div className="glass-panel animate-fade-in desktop-only" style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6,
-        padding: 6,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}>
+      <div className="glass-panel animate-fade-in spare-piece-column">
         {piecesList.map((pt) => {
           const isActive = selectedBrush === pt;
           return (
             <div
               key={pt}
               onClick={() => handleSparePieceClick(pt)}
+              className="spare-piece-slot"
               style={{
-                width: 38,
-                height: 38,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 6,
                 border: isActive ? '2px solid var(--accent-color)' : '1px solid transparent',
-                background: isActive ? 'rgba(var(--accent-color-rgb), 0.12)' : 'transparent',
-                cursor: 'grab',
-                transition: 'all 0.15s',
+                background: isActive ? 'rgba(var(--accent-color-rgb), 0.15)' : 'transparent',
                 transform: isActive ? 'scale(1.08)' : 'scale(1)',
                 boxShadow: isActive ? '0 0 8px rgba(var(--accent-color-rgb), 0.25)' : 'none',
               }}
               title={pt}
             >
-              <div style={{ width: 32, height: 32 }}>
+              <div className="spare-piece-icon">
                 <SparePiece pieceType={pt} />
               </div>
             </div>
@@ -297,80 +307,9 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
         })}
         {colorName === 'white' && (
           <button
-            className={`glass-button ${selectedBrush === 'eraser' ? 'active' : ''}`}
+            className={`glass-button spare-piece-eraser ${selectedBrush === 'eraser' ? 'active' : ''}`}
             onClick={() => setSelectedBrush(selectedBrush === 'eraser' ? null : 'eraser')}
             style={{
-              width: 38,
-              height: 38,
-              padding: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 6,
-              border: selectedBrush === 'eraser' ? '2px solid var(--danger-color)' : '1px solid var(--border-glass)',
-              background: selectedBrush === 'eraser' ? 'var(--danger-color)' : 'transparent',
-              color: selectedBrush === 'eraser' ? '#fff' : 'var(--danger-color)',
-            }}
-            title="Borrador"
-          >
-            <Trash2 style={{ width: 16, height: 16 }} />
-          </button>
-        )}
-      </div>
-    );
-  };
-
-  const renderSparePieceRow = (piecesList, colorName) => {
-    return (
-      <div className="glass-panel animate-fade-in mobile-only mobile-spare-row" style={{
-        display: 'flex',
-        flexDirection: 'row',
-        gap: 5,
-        padding: '3px 8px',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-        borderRadius: 8,
-      }}>
-        {piecesList.map((pt) => {
-          const isActive = selectedBrush === pt;
-          return (
-            <div
-              key={pt}
-              onClick={() => handleSparePieceClick(pt)}
-              style={{
-                width: 32,
-                height: 32,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 6,
-                border: isActive ? '2px solid var(--accent-color)' : '1px solid transparent',
-                background: isActive ? 'rgba(var(--accent-color-rgb), 0.15)' : 'transparent',
-                cursor: 'grab',
-                transition: 'all 0.15s',
-                transform: isActive ? 'scale(1.08)' : 'scale(1)',
-              }}
-              title={pt}
-            >
-              <div style={{ width: 28, height: 28 }}>
-                <SparePiece pieceType={pt} />
-              </div>
-            </div>
-          );
-        })}
-        {colorName === 'white' && (
-          <button
-            className={`glass-button ${selectedBrush === 'eraser' ? 'active' : ''}`}
-            onClick={() => setSelectedBrush(selectedBrush === 'eraser' ? null : 'eraser')}
-            style={{
-              width: 32,
-              height: 32,
-              padding: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 6,
               border: selectedBrush === 'eraser' ? '2px solid var(--danger-color)' : '1px solid var(--border-glass)',
               background: selectedBrush === 'eraser' ? 'var(--danger-color)' : 'transparent',
               color: selectedBrush === 'eraser' ? '#fff' : 'var(--danger-color)',
@@ -468,19 +407,16 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
 
       {/* ===== Board & Side Columns (Editor) or Sidebar moves (Game) ===== */}
       <ChessboardProvider options={chessboardOptions}>
-        {/* Mobile: Black spare pieces on top (Editor mode only) */}
-        {!isGameMode && renderSparePieceRow(SPARE_PIECES_BLACK, 'black')}
-
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
-          gap: 12,
+          gap: 8,
           flex: '1 1 auto',
           minHeight: 0,
         }}>
-          {/* Left Column (Editor: White pieces, Game: Move notation column) - Desktop only */}
+          {/* Left Column (Editor: White pieces, Game: Move notation column) - Desktop only for game notation */}
           {isGameMode ? (
             <div className="glass-panel animate-fade-in desktop-only" style={{
               width: 120,
@@ -494,7 +430,7 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
               <div style={{ fontSize: 8, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6, borderBottom: '1px solid var(--border-glass)', paddingBottom: 4, textAlign: 'center' }}>
                 Notación
               </div>
-              <div style={{
+              <div ref={desktopNotationRef} style={{
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 4,
@@ -551,16 +487,13 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
             <Chessboard {...chessboardOptions} />
           </div>
 
-          {/* Right Column: Black pieces (Editor mode only) - Desktop only */}
+          {/* Right Column: Black pieces (Editor mode only) */}
           {!isGameMode && renderSparePieceColumn(SPARE_PIECES_BLACK, 'black')}
         </div>
 
-        {/* Mobile: White spare pieces on bottom (Editor mode only) */}
-        {!isGameMode && renderSparePieceRow(SPARE_PIECES_WHITE, 'white')}
-
         {/* Mobile: Move history tape in Game mode */}
         {isGameMode && (
-          <div className="glass-panel animate-fade-in mobile-only" style={{
+          <div ref={mobileMoveTapeRef} className="glass-panel animate-fade-in mobile-only" style={{
             display: 'flex',
             alignItems: 'center',
             gap: 4,

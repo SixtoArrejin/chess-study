@@ -1,4 +1,5 @@
-import { X, Sun, Moon, LayoutGrid, Palette, RotateCcw, Volume2, VolumeX, Settings } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Sun, Moon, LayoutGrid, Palette, RotateCcw, Volume2, VolumeX, Settings, BookOpen, Trash2, RefreshCw, Maximize2, Minimize2 } from 'lucide-react';
 import soundManager from '../helpers/soundHelper';
 import logo from '../assets/logo.png';
 
@@ -106,8 +107,37 @@ export default function SettingsMenu({
   layoutInverted, setLayoutInverted,
   boardTheme, setBoardTheme,
   soundEnabled, setSoundEnabled,
+  pdfFile, onSetPdfFile,
   onResetAll,
 }) {
+  const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
+  const pdfInputRef = useRef(null);
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
+
+  const handleToggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          await document.documentElement.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          await document.webkitExitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.warn('Fullscreen error:', err);
+    }
+  };
   if (!isOpen) return null;
 
   const sectionTitle = {
@@ -168,8 +198,8 @@ export default function SettingsMenu({
           </button>
         </div>
 
-        {/* App Branding Card */}
-        <div style={{
+        {/* App Branding Card (visible solo en móviles) */}
+        <div className="mobile-only" style={{
           padding: '14px 20px',
           borderBottom: '1px solid var(--border-glass)',
           display: 'flex',
@@ -220,7 +250,79 @@ export default function SettingsMenu({
             </div>
           </div>
 
-          {/* 2. Theme Switch */}
+          {/* 2. Libro PDF Actual */}
+          <div>
+            <div style={sectionTitle}><BookOpen style={iconSm} /> Libro PDF</div>
+            {pdfFile ? (
+              <div className="glass-panel" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    background: 'rgba(var(--accent-color-rgb), 0.15)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                  }}>
+                    <BookOpen style={{ width: 16, height: 16, color: 'var(--accent-color)' }} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: 11, fontWeight: 700, color: 'var(--text-primary)',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                    }}>
+                      {pdfFile.name}
+                    </div>
+                    <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>
+                      {pdfFile.size ? `${(pdfFile.size / (1024 * 1024)).toFixed(1)} MB` : 'Libro cargado'}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 2 }}>
+                  <button
+                    className="glass-button"
+                    onClick={() => pdfInputRef.current?.click()}
+                    style={{ padding: '8px', fontSize: 10, gap: 6 }}
+                  >
+                    <RefreshCw style={{ width: 12, height: 12 }} />
+                    Cambiar
+                  </button>
+                  <button
+                    className="glass-button"
+                    onClick={() => onSetPdfFile && onSetPdfFile(null)}
+                    style={{ padding: '8px', fontSize: 10, gap: 6, color: 'var(--danger-color)' }}
+                  >
+                    <Trash2 style={{ width: 12, height: 12 }} />
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="glass-panel" style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Ningún libro cargado</span>
+                <button
+                  className="glass-button"
+                  onClick={() => pdfInputRef.current?.click()}
+                  style={{ padding: '6px 12px', fontSize: 10, gap: 6, color: 'var(--accent-color)' }}
+                >
+                  <BookOpen style={{ width: 12, height: 12 }} />
+                  Cargar PDF
+                </button>
+              </div>
+            )}
+            <input
+              type="file"
+              ref={pdfInputRef}
+              accept="application/pdf"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f && f.type === 'application/pdf' && onSetPdfFile) {
+                  onSetPdfFile(f);
+                }
+              }}
+            />
+          </div>
+
+          {/* 3. Theme Switch */}
           <div>
             <div style={sectionTitle}><Sun style={iconSm} /> Tema</div>
             <SwitchRow
@@ -233,7 +335,7 @@ export default function SettingsMenu({
             />
           </div>
 
-          {/* 3. Sound Switch */}
+          {/* 4. Sound Switch */}
           <div>
             <div style={sectionTitle}><Volume2 style={iconSm} /> Sonido de Piezas</div>
             <SwitchRow
@@ -243,6 +345,19 @@ export default function SettingsMenu({
               subtitle={soundEnabled ? 'Sonido típico al mover y capturar' : 'Sin efectos de sonido'}
               checked={soundEnabled}
               onToggle={handleToggleSound}
+            />
+          </div>
+
+          {/* 5. Pantalla Completa */}
+          <div>
+            <div style={sectionTitle}><Maximize2 style={iconSm} /> Modo de Visualización</div>
+            <SwitchRow
+              icon={isFullscreen ? Minimize2 : Maximize2}
+              iconColor={isFullscreen ? 'var(--accent-color)' : 'var(--text-muted)'}
+              title={isFullscreen ? 'Pantalla Completa Activa' : 'Pantalla Completa'}
+              subtitle={isFullscreen ? 'Oculta barras del navegador' : 'Ocultar barras del navegador'}
+              checked={isFullscreen}
+              onToggle={handleToggleFullscreen}
             />
           </div>
 

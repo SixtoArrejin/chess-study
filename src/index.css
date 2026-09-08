@@ -273,6 +273,43 @@ body {
   flex-shrink: 0;
 }
 
+/* ===== Spare Pieces Columns ===== */
+.spare-piece-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.spare-piece-slot {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: grab;
+  transition: all 0.15s;
+}
+
+.spare-piece-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.spare-piece-eraser {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
 /* ===== Custom Scrollbars ===== */
 ::-webkit-scrollbar {
   width: 5px;
@@ -316,9 +353,6 @@ body {
   .mobile-only {
     display: none !important;
   }
-  .mobile-book-header {
-    display: none !important;
-  }
 }
 
 /* ===== Mobile Layout ===== */
@@ -333,10 +367,6 @@ body {
 
   span.mobile-only {
     display: inline !important;
-  }
-
-  .mobile-book-header {
-    display: flex !important;
   }
 
   .app-header-desktop {
@@ -368,7 +398,7 @@ body {
     min-width: 0 !important;
     flex: 0 0 auto !important;
     height: auto !important;
-    max-height: 54vh !important;
+    max-height: 52vh !important;
     overflow: hidden !important;
     border-bottom: 1px solid var(--border-glass) !important;
     z-index: 2;
@@ -390,7 +420,7 @@ body {
   }
 
   .chess-panel-container {
-    padding: 8px 10px !important;
+    padding: 6px 8px !important;
     gap: 6px !important;
     height: 100% !important;
     width: 100% !important;
@@ -398,8 +428,36 @@ body {
     box-sizing: border-box !important;
   }
 
+  .spare-piece-column {
+    gap: 3px !important;
+    padding: 3px !important;
+    border-radius: 8px !important;
+  }
+
+  .spare-piece-slot {
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 5px !important;
+  }
+
+  .spare-piece-icon {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .spare-piece-eraser {
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 5px !important;
+  }
+
+  .spare-piece-eraser svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
   .chessboard-wrapper {
-    max-width: min(92vw, 320px, 34vh) !important;
+    max-width: min(calc(100vw - 78px), 290px, 36vh) !important;
     width: 100% !important;
     aspect-ratio: 1 !important;
     margin: 0 auto !important;
@@ -417,9 +475,5 @@ body {
 
   .classics-grid {
     grid-template-columns: 1fr !important;
-  }
-
-  .mobile-spare-row {
-    margin: 0 auto !important;
   }
 }
