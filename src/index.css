@@ -13,6 +13,8 @@
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --transition-speed: 0.3s;
   --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --drag-piece-scale: 1.2;
+  --drag-piece-y: 0px;
 }
 
 /* Theme: Light */
@@ -378,6 +380,21 @@ body {
     display: none !important;
   }
 
+  :root,
+  .app-layout {
+    --drag-piece-scale: 1.6;
+    --drag-piece-y: -14px;
+  }
+
+  /* Spare pieces dragged from lateral slots scale up larger so finger doesn't cover them */
+  div[id*="-piece-wK-wK"], div[id*="-piece-wQ-wQ"], div[id*="-piece-wR-wR"],
+  div[id*="-piece-wB-wB"], div[id*="-piece-wN-wN"], div[id*="-piece-wP-wP"],
+  div[id*="-piece-bK-bK"], div[id*="-piece-bQ-bQ"], div[id*="-piece-bR-bR"],
+  div[id*="-piece-bB-bB"], div[id*="-piece-bN-bN"], div[id*="-piece-bP-bP"] {
+    --drag-piece-scale: 2.4;
+    --drag-piece-y: -22px;
+  }
+
   .app-layout {
     width: 100vw !important;
     max-width: 100vw !important;
@@ -499,6 +516,20 @@ body {
 
   .app-header-desktop {
     display: none !important;
+  }
+
+  :root,
+  .app-layout {
+    --drag-piece-scale: 1.5;
+    --drag-piece-y: -10px;
+  }
+
+  div[id*="-piece-wK-wK"], div[id*="-piece-wQ-wQ"], div[id*="-piece-wR-wR"],
+  div[id*="-piece-wB-wB"], div[id*="-piece-wN-wN"], div[id*="-piece-wP-wP"],
+  div[id*="-piece-bK-bK"], div[id*="-piece-bQ-bQ"], div[id*="-piece-bR-bR"],
+  div[id*="-piece-bB-bB"], div[id*="-piece-bN-bN"], div[id*="-piece-bP-bP"] {
+    --drag-piece-scale: 2.3;
+    --drag-piece-y: -16px;
   }
 
   .app-layout {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Chess } from 'chess.js';
 import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import {
@@ -378,7 +379,13 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
     showNotation: true,
     darkSquareStyle: { backgroundColor: activeColors.dark },
     lightSquareStyle: { backgroundColor: activeColors.light },
-    boardStyle: { borderRadius: 8, overflow: 'hidden', boxShadow: 'none' }
+    boardStyle: { borderRadius: 8, overflow: 'hidden', boxShadow: 'none' },
+    draggingPieceStyle: {
+      transform: 'scale(var(--drag-piece-scale, 1.2)) translateY(var(--drag-piece-y, 0px))',
+      filter: 'drop-shadow(0 10px 24px rgba(0, 0, 0, 0.55))',
+      transition: 'transform 0.05s ease-out',
+      zIndex: 1000,
+    }
   }), [chessboardPosition, handlePieceDrop, handleSquareClick, boardOrientation, activeColors]);
 
   return (
@@ -392,19 +399,19 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
     }}>
 
       {/* ===== Turn Modal ===== */}
-      {showTurnModal && (
+      {showTurnModal && typeof document !== 'undefined' && createPortal(
         <div style={{
           position: 'fixed',
           inset: 0,
-          zIndex: 9999,
+          zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'rgba(0,0,0,0.45)',
-          backdropFilter: 'blur(6px)',
+          background: 'rgba(0,0,0,0.55)',
+          backdropFilter: 'blur(8px)',
         }}>
           <div className="glass-panel glass-panel-active animate-fade-in"
-            style={{ padding: 28, maxWidth: 360, width: '90%', textAlign: 'center' }}>
+            style={{ padding: 28, maxWidth: 360, width: '90%', textAlign: 'center', zIndex: 100000, position: 'relative' }}>
             <h3 style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', marginBottom: 10, textTransform: 'uppercase' }}>
               ¿Quién juega primero?
             </h3>
@@ -422,7 +429,8 @@ export default function ChessPanel({ boardTheme, soundEnabled, onOpenSettings })
               Cancelar
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ===== Mode label + fullscreen + settings ===== */}
