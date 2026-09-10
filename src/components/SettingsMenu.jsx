@@ -391,6 +391,24 @@ export default function SettingsMenu({
             <RotateCcw style={{ width: 14, height: 14 }} />
             Restaurar Ajustes
           </button>
+          <div style={{ textAlign: 'center', marginTop: 12 }}>
+            <a
+              href="/privacidad.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: 11,
+                color: 'var(--text-muted)',
+                textDecoration: 'underline',
+                textUnderlineOffset: 3,
+                transition: 'color 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+            >
+              Política de Privacidad
+            </a>
+          </div>
         </div>
       </div>
     </div>

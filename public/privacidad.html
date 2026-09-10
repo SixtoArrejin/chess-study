@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Política de Privacidad — Chess Study</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .theme-light {
+      --bg-app: hsl(220, 20%, 95%);
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --border: rgba(0, 0, 0, 0.08);
+      --text-primary: hsl(222, 47%, 12%);
+      --text-secondary: hsl(215, 25%, 35%);
+      --text-muted: hsl(215, 16%, 50%);
+      --accent: hsl(224, 76%, 40%);
+      --accent-rgb: 30, 64, 175;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    }
+    .theme-dark {
+      --bg-app: hsl(224, 71%, 4%);
+      --bg-card: rgba(10, 15, 30, 0.75);
+      --border: rgba(255, 255, 255, 0.08);
+      --text-primary: hsl(210, 40%, 98%);
+      --text-secondary: hsl(215, 20%, 72%);
+      --text-muted: hsl(215, 12%, 48%);
+      --accent: hsl(210, 100%, 60%);
+      --accent-rgb: 59, 130, 246;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    body {
+      margin: 0;
+      padding: 32px 16px;
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      min-height: 100vh;
+      box-sizing: border-box;
+      line-height: 1.65;
+    }
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      box-shadow: var(--shadow);
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+      margin-bottom: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand p {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(var(--accent-rgb), 0.08);
+      transition: background 0.15s;
+    }
+    .back-btn:hover {
+      background: rgba(var(--accent-rgb), 0.16);
+    }
+    h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 28px;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    p, li {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin: 8px 0;
+    }
+    ul {
+      padding-left: 20px;
+      margin: 10px 0;
+    }
+    .highlight-box {
+      background: rgba(var(--accent-rgb), 0.08);
+      border-left: 3px solid var(--accent);
+      padding: 14px 18px;
+      border-radius: 0 10px 10px 0;
+      margin: 20px 0;
+    }
+    .highlight-box p {
+      color: var(--text-primary);
+      font-size: 14px;
+      margin: 0;
+    }
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+  <script>
+    // Sincronizar tema con la configuración del usuario o del sistema
+    (function () {
+      const saved = localStorage.getItem('chess-study-theme');
+      const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+      const theme = saved ? saved : (prefersLight ? 'light' : 'dark');
+      document.documentElement.classList.add(theme === 'dark' ? 'theme-dark' : 'theme-light');
+    })();
+  </script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <img src="/icon-192.png" alt="Chess Study Logo" />
+        <div>
+          <h1>Chess Study</h1>
+          <p>Política de Privacidad &bull; Última actualización: Septiembre 2026</p>
+        </div>
+      </div>
+      <a href="/" class="back-btn">&larr; Volver a la App</a>
+    </header>
+
+    <div class="highlight-box">
+      <p><strong>Resumen claro:</strong> Chess Study es una herramienta diseñada con privacidad total desde su origen. No recopilamos información personal, no vendemos datos ni almacenamos tus libros o partidas en servidores externos.</p>
+    </div>
+
+    <h2>1. Información que recopilamos</h2>
+    <p>Chess Study funciona como una aplicación del lado del cliente (Client-Side Progressive Web App). La aplicación <strong>no requiere registro, cuentas ni inicio de sesión</strong>, y no solicita ni almacena:</p>
+    <ul>
+      <li>Nombres, correos electrónicos o contraseñas.</li>
+      <li>Ubicación geográfica o datos de red celular.</li>
+      <li>Información de pago o datos bancarios.</li>
+      <li>Identificadores publicitarios del dispositivo.</li>
+    </ul>
+
+    <h2>2. Almacenamiento local y datos de uso</h2>
+    <p>Para su correcto funcionamiento sin conexión (offline) y para preservar tu progreso de estudio, la aplicación almacena datos <strong>únicamente en la memoria local de tu dispositivo</strong> mediante las APIs estándar del navegador (IndexedDB y LocalStorage):</p>
+    <ul>
+      <li><strong>Archivos PDF:</strong> Los libros que abres se guardan en el almacenamiento local de tu navegador para que puedas leerlos sin conexión a internet.</li>
+      <li><strong>Partidas y posiciones:</strong> Las anotaciones, variantes y estados del tablero de ajedrez se guardan localmente en tu equipo.</li>
+      <li><strong>Preferencias visuales:</strong> Modo claro/oscuro, temas del tablero y zoom.</li>
+    </ul>
+    <p><em>Estos datos residen exclusivamente en tu dispositivo y nunca son transmitidos a ningún servidor.</em></p>
+
+    <h2>3. Servicios y proveedores de terceros</h2>
+    <p>La aplicación utiliza servicios de infraestructura mínimos necesarios para servir el software:</p>
+    <ul>
+      <li><strong>Alojamiento Web (Vercel):</strong> La aplicación se distribuye a través de la red global de Vercel bajo conexiones cifradas HTTPS. Los registros técnicos del servidor pueden almacenar temporalmente direcciones IP anónimas con fines de entrega de contenido y seguridad de red.</li>
+      <li><strong>Tipografías (Google Fonts):</strong> Se utilizan fuentes seguras para optimizar la visualización de la interfaz.</li>
+    </ul>
+
+    <h2>4. Menores de edad</h2>
+    <p>Chess Study es una aplicación apta para todo público orientada al aprendizaje y estudio del ajedrez. No recopila datos de ningún usuario, incluidos menores de 13 años.</p>
+
+    <h2>5. Seguridad</h2>
+    <p>Toda la comunicación web se realiza estrictamente a través del protocolo seguro <strong>HTTPS con cifrado TLS</strong>. Tus libros y notas de ajedrez permanecen bajo tu exclusivo control en tu propio navegador o dispositivo.</p>
+
+    <h2>6. Contacto</h2>
+    <p>Si tienes cualquier consulta, sugerencia o inquietud relacionada con esta política o el funcionamiento de Chess Study, puedes contactar al equipo desarrollador en:</p>
+    <p><strong>Asymmetric Devs</strong><br />
+    Sitio web: <a href="https://chess-study.asymmetric.com.ar" style="color: var(--accent);">chess-study.asymmetric.com.ar</a><br />
+    Dominio: <a href="https://asymmetric.com.ar" style="color: var(--accent);">asymmetric.com.ar</a></p>
+
+    <footer>
+      &copy; 2026 Chess Study &bull; Asymmetric Devs. Todos los derechos reservados.
+    </footer>
+  </div>
+</body>
+</html>
