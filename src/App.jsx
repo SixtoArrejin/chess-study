@@ -31,6 +31,66 @@ export default function App() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  /* ========= FORCED LANDSCAPE (MOBILE) ========= */
+  const [isForcedLandscape, setIsForcedLandscape] = useState(() => {
+    return localStorage.getItem('chess-study-forced-landscape') === 'true';
+  });
+
+  const [isPhysicalPortrait, setIsPhysicalPortrait] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerHeight > window.innerWidth;
+  });
+
+  const shouldRotate = isForcedLandscape && isPhysicalPortrait;
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      const portrait = window.innerHeight > window.innerWidth;
+      setIsPhysicalPortrait(portrait);
+      document.documentElement.style.setProperty('--viewport-h', `${window.innerHeight}px`);
+      document.documentElement.style.setProperty('--viewport-w', `${window.innerWidth}px`);
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    window.addEventListener('orientationchange', updateDimensions);
+
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      window.removeEventListener('orientationchange', updateDimensions);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (shouldRotate) {
+      document.body.classList.add('body-forced-rotated');
+    } else {
+      document.body.classList.remove('body-forced-rotated');
+    }
+  }, [shouldRotate]);
+
+  const handleToggleForcedLandscape = useCallback(async () => {
+    const nextVal = !isForcedLandscape;
+    setIsForcedLandscape(nextVal);
+    localStorage.setItem('chess-study-forced-landscape', String(nextVal));
+
+    if (nextVal) {
+      if (screen.orientation && typeof screen.orientation.lock === 'function') {
+        try {
+          await screen.orientation.lock('landscape');
+        } catch (e) {
+          // Native lock not permitted without fullscreen or on iOS - fallback CSS rotation handles it
+        }
+      }
+    } else {
+      if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+        try {
+          screen.orientation.unlock();
+        } catch (e) {}
+      }
+    }
+  }, [isForcedLandscape]);
+
   /* ========= NETWORK / OFFLINE STATE ========= */
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
 
@@ -167,6 +227,11 @@ export default function App() {
     localStorage.removeItem('chess-study-fen-history');
     localStorage.removeItem('chess-study-history-index');
     localStorage.removeItem('chess-study-move-list');
+    setIsForcedLandscape(false);
+    localStorage.removeItem('chess-study-forced-landscape');
+    if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+      try { screen.orientation.unlock(); } catch (e) {}
+    }
     setIsSettingsOpen(false);
   };
 
@@ -176,7 +241,13 @@ export default function App() {
       className="left-panel"
       style={{ width: `${leftWidthPercent}%` }}
     >
-      <ChessPanel boardTheme={boardTheme} soundEnabled={soundEnabled} onOpenSettings={() => setIsSettingsOpen(true)} />
+      <ChessPanel
+        boardTheme={boardTheme}
+        soundEnabled={soundEnabled}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        isForcedLandscape={isForcedLandscape}
+        onToggleForcedLandscape={handleToggleForcedLandscape}
+      />
     </div>
   );
 
@@ -208,7 +279,7 @@ export default function App() {
   );
 
   return (
-    <div className={`app-layout ${layoutInverted ? 'layout-inverted' : ''} ${isResizing ? 'is-resizing' : ''}`}>
+    <div className={`app-layout ${layoutInverted ? 'layout-inverted' : ''} ${isResizing ? 'is-resizing' : ''} ${isForcedLandscape ? 'forced-landscape' : ''} ${shouldRotate ? 'forced-landscape-rotated' : ''}`}>
       {/* Settings Drawer */}
       <SettingsMenu
         isOpen={isSettingsOpen}
@@ -224,7 +295,6 @@ export default function App() {
         pdfFile={pdfFile}
         onSetPdfFile={handleSetPdf}
         onResetAll={handleResetAll}
-        isOnline={isOnline}
       />
 
       {/* ===== HEADER ===== */}

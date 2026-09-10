@@ -1,18 +1,98 @@
 {
+  "id": "/",
   "name": "Chess Study",
   "short_name": "Chess Study",
   "description": "Lector de libros de ajedrez en PDF y Tablero de Análisis interactivo",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0a0f1e",
   "theme_color": "#0a0f1e",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": [
+    "education",
+    "games",
+    "books"
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/favicon.png",
-      "sizes": "192x192 512x512",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile-1.jpg",
+      "sizes": "591x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Tablero y visor en móvil"
+    },
+    {
+      "src": "/screenshots/mobile-2.jpg",
+      "sizes": "591x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Biblioteca de libros de ajedrez"
+    },
+    {
+      "src": "/screenshots/mobile-3.jpg",
+      "sizes": "591x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Análisis interactivo de posiciones"
+    },
+    {
+      "src": "/screenshots/mobile-4.jpg",
+      "sizes": "591x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Modo de lectura y variantes"
+    },
+    {
+      "src": "/screenshots/mobile-5.jpg",
+      "sizes": "591x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Estudio de partidas"
+    },
+    {
+      "src": "/screenshots/mobile-6.jpg",
+      "sizes": "591x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Configuración y herramientas"
+    },
+    {
+      "src": "/screenshots/desktop-1.jpg",
+      "sizes": "1280x591",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Vista horizontal en tablet y escritorio"
+    },
+    {
+      "src": "/screenshots/desktop-2.jpg",
+      "sizes": "1280x591",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Pantalla dividida con visor PDF y tablero"
     }
   ]
 }

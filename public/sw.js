@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chess-study-shell-v1';
+const CACHE_NAME = 'chess-study-shell-v2';
 const BOOKS_CACHE = 'chess-study-books-v1';
 
 const DB_NAME = 'ChessStudyDB';
@@ -12,6 +12,9 @@ const PRECACHE_ASSETS = [
   '/manifest.json',
   '/favicon.png',
   '/favicon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/icon-maskable-512.png',
   '/icons.svg',
   '/sounds/move.mp3',
   '/sounds/capture.mp3',
