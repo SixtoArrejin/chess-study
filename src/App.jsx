@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Settings, BookOpen, RefreshCw, Trash2 } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Settings, BookOpen, RefreshCw, Trash2, WifiOff } from 'lucide-react';
 import ChessPanel from './components/ChessPanel';
 import PdfPanel from './components/PdfPanel';
 import SettingsMenu from './components/SettingsMenu';
@@ -31,6 +31,22 @@ export default function App() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  /* ========= NETWORK / OFFLINE STATE ========= */
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   /* ========= SPLIT SCREEN STATE ========= */
   const [leftWidthPercent, setLeftWidthPercent] = useState(() => {
     const saved = localStorage.getItem('chess-study-left-width');
@@ -53,10 +69,10 @@ export default function App() {
     }
     loadSavedPdf();
 
-    // Register Service Worker for stable PDF URLs and native browser page memory
+    // Register Service Worker for offline support and stable PDF URLs
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
-        .then(() => console.log('Service Worker registrado para memoria del PDF'))
+        .then(() => console.log('Service Worker registrado con soporte offline y memoria de PDF'))
         .catch((err) => console.error('Error al registrar Service Worker:', err));
     }
   }, []);
@@ -208,6 +224,7 @@ export default function App() {
         pdfFile={pdfFile}
         onSetPdfFile={handleSetPdf}
         onResetAll={handleResetAll}
+        isOnline={isOnline}
       />
 
       {/* ===== HEADER ===== */}
@@ -258,22 +275,48 @@ export default function App() {
             <img src={logo} alt="Chess Study Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div style={{ overflow: 'hidden' }}>
-            <h1
-              style={{
-                fontSize: 13,
-                fontWeight: 800,
-                letterSpacing: '0.12em',
-                lineHeight: 1.1,
-                color: 'var(--text-primary)',
-                textTransform: 'uppercase',
-                margin: 0,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              CHESS STUDY
-            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <h1
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  lineHeight: 1.1,
+                  color: 'var(--text-primary)',
+                  textTransform: 'uppercase',
+                  margin: 0,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                CHESS STUDY
+              </h1>
+              {!isOnline && (
+                <span
+                  style={{
+                    fontSize: 8,
+                    fontWeight: 700,
+                    color: '#f59e0b',
+                    background: 'rgba(245, 158, 11, 0.12)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    padding: '1px 5px',
+                    borderRadius: 4,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 3,
+                    lineHeight: '12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    flexShrink: 0,
+                  }}
+                  title="Modo sin conexión: la aplicación está funcionando con los datos y archivos locales"
+                >
+                  <WifiOff style={{ width: 9, height: 9 }} />
+                  Offline
+                </span>
+              )}
+            </div>
             <span
               style={{
                 fontSize: 9,

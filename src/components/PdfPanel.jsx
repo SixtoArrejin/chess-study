@@ -297,7 +297,11 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
       setPdfFile(file);
     } catch (err) {
       console.error('Error loading classic book:', err);
-      alert('Error al descargar el libro de ajedrez clásico. Por favor intenta de nuevo.');
+      if (!navigator.onLine) {
+        alert('Estás sin conexión a internet y este libro clásico aún no ha sido descargado en este dispositivo. Conéctate a internet para descargarlo por primera vez o selecciona un archivo PDF de tu dispositivo.');
+      } else {
+        alert('Error al descargar el libro de ajedrez clásico. Por favor intenta de nuevo.');
+      }
     } finally {
       setIsClassicLoading(false);
     }
