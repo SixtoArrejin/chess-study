@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Carpeta de la google play - pwabuilder
+Chess-Study-Google-Play-package
