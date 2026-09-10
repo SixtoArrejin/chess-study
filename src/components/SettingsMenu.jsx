@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { X, Sun, Moon, LayoutGrid, Palette, RotateCcw, Volume2, VolumeX, Settings, BookOpen, Trash2, RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import { X, Sun, Moon, LayoutGrid, Palette, RotateCcw, Volume2, VolumeX, Settings, BookOpen, Trash2, RefreshCw } from 'lucide-react';
 import soundManager from '../helpers/soundHelper';
 import logo from '../assets/logo.png';
 
@@ -207,44 +207,6 @@ export default function SettingsMenu({
 
         {/* Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {/* Connectivity Status */}
-          <div className="glass-panel" style={{
-            padding: '10px 14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderRadius: 10,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: isOnline ? 'rgba(34, 197, 94, 0.12)' : 'rgba(245, 158, 11, 0.14)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                {isOnline ? (
-                  <Wifi style={{ width: 14, height: 14, color: 'var(--color-success, #22c55e)' }} />
-                ) : (
-                  <WifiOff style={{ width: 14, height: 14, color: '#f59e0b' }} />
-                )}
-              </div>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)' }}>
-                  {isOnline ? 'Conexión: En línea' : 'Modo Sin Conexión (Offline)'}
-                </div>
-                <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>
-                  {isOnline
-                    ? 'PWA lista para funcionar sin conexión a internet'
-                    : 'Funcionando con recursos locales y base de datos local'}
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* 1. Layout */}
           <div>
             <div style={sectionTitle}><LayoutGrid style={iconSm} /> Distribución</div>
@@ -382,33 +344,33 @@ export default function SettingsMenu({
             </div>
           </div>
 
-        </div>
-
-        {/* Footer */}
-        <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border-glass)' }}>
-          <button className="glass-button" onClick={() => { if (confirm('¿Restaurar ajustes predeterminados?')) onResetAll(); }}
-            style={{ width: '100%', padding: '10px 0', fontSize: 11, color: 'var(--danger-color)' }}>
-            <RotateCcw style={{ width: 14, height: 14 }} />
-            Restaurar Ajustes
-          </button>
-          <div style={{ textAlign: 'center', marginTop: 12 }}>
-            <a
-              href="/privacidad.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                fontSize: 11,
-                color: 'var(--text-muted)',
-                textDecoration: 'underline',
-                textUnderlineOffset: 3,
-                transition: 'color 0.15s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-            >
-              Política de Privacidad
-            </a>
+          {/* Footer (dentro del scroll al final) */}
+          <div style={{ marginTop: 4, paddingTop: 16, borderTop: '1px solid var(--border-glass)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <button className="glass-button" onClick={() => { if (confirm('¿Restaurar ajustes predeterminados?')) onResetAll(); }}
+              style={{ width: '100%', padding: '10px 0', fontSize: 11, color: 'var(--danger-color)' }}>
+              <RotateCcw style={{ width: 14, height: 14 }} />
+              Restaurar Ajustes
+            </button>
+            <div style={{ textAlign: 'center' }}>
+              <a
+                href="/privacidad.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: 11,
+                  color: 'var(--text-muted)',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: 3,
+                  transition: 'color 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+              >
+                Política de Privacidad
+              </a>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
