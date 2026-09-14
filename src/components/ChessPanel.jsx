@@ -23,32 +23,10 @@ const THEME_COLORS = {
   slate:     { dark: '#374151', light: '#e5e7eb' },
 };
 
-function ScreenRotationIcon({ style = {} }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={style}
-    >
-      <rect x="2" y="6" width="20" height="12" rx="2.5" />
-      <path d="M19 12h.01" />
-      <path d="M5 12h.01" />
-      <path d="M7 2.5a8 8 0 0 1 10 0" strokeDasharray="2.5 1.5" />
-      <polyline points="18 1 18.5 3.5 16 3.5" />
-    </svg>
-  );
-}
-
 export default function ChessPanel({
   boardTheme,
   soundEnabled,
   onOpenSettings,
-  isForcedLandscape = false,
-  onToggleForcedLandscape,
 }) {
   /* ===== Mode ===== */
   const [isGameMode, setIsGameMode] = useState(() => {
@@ -466,28 +444,6 @@ export default function ChessPanel({
           {isGameMode ? 'MODO JUEGO Y ANÁLISIS' : 'MODO LIBRE: EDITOR DE TABLERO'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          {onToggleForcedLandscape && (
-            <button
-              onClick={onToggleForcedLandscape}
-              className="mobile-only"
-              style={{
-                background: isForcedLandscape ? 'rgba(var(--accent-color-rgb), 0.18)' : 'none',
-                border: isForcedLandscape ? '1px solid rgba(var(--accent-color-rgb), 0.35)' : '1px solid transparent',
-                cursor: 'pointer',
-                color: isForcedLandscape ? 'var(--accent-color)' : 'var(--text-muted)',
-                padding: 4,
-                borderRadius: 6,
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.15s ease',
-              }}
-              title={isForcedLandscape ? 'Desactivar vista horizontal fija' : 'Fijar vista horizontal'}
-              aria-label={isForcedLandscape ? 'Desactivar vista horizontal fija' : 'Fijar vista horizontal'}
-            >
-              <ScreenRotationIcon style={{ width: 16, height: 16 }} />
-            </button>
-          )}
-
           <button
             onClick={handleToggleFullscreen}
             style={{
