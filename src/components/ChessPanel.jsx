@@ -81,51 +81,6 @@ export default function ChessPanel({
 
   const mobileMoveTapeRef = useRef(null);
   const desktopNotationRef = useRef(null);
-  const boardAreaRef = useRef(null);
-  const leftColRef = useRef(null);
-  const rightColRef = useRef(null);
-  const [boardSize, setBoardSize] = useState(null);
-
-  const calculateBoardSize = useCallback(() => {
-    if (!boardAreaRef.current) return;
-    const areaRect = boardAreaRef.current.getBoundingClientRect();
-    const areaWidth = areaRect.width;
-    const areaHeight = areaRect.height;
-    if (areaWidth <= 0 || areaHeight <= 0) return;
-
-    const leftW = leftColRef.current ? leftColRef.current.offsetWidth : 0;
-    const rightW = rightColRef.current ? rightColRef.current.offsetWidth : 0;
-    const horizontalGaps = (leftW > 0 ? 8 : 0) + (rightW > 0 ? 8 : 0);
-
-    const availableWidth = Math.max(60, areaWidth - leftW - rightW - horizontalGaps);
-    const availableHeight = Math.max(60, areaHeight);
-
-    const size = Math.floor(Math.min(availableWidth, availableHeight));
-    setBoardSize(size);
-  }, []);
-
-  useEffect(() => {
-    calculateBoardSize();
-
-    if (!boardAreaRef.current) return;
-    const ro = new ResizeObserver(() => {
-      calculateBoardSize();
-    });
-    ro.observe(boardAreaRef.current);
-
-    window.addEventListener('resize', calculateBoardSize);
-    window.addEventListener('orientationchange', calculateBoardSize);
-    document.addEventListener('fullscreenchange', calculateBoardSize);
-    document.addEventListener('webkitfullscreenchange', calculateBoardSize);
-
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', calculateBoardSize);
-      window.removeEventListener('orientationchange', calculateBoardSize);
-      document.removeEventListener('fullscreenchange', calculateBoardSize);
-      document.removeEventListener('webkitfullscreenchange', calculateBoardSize);
-    };
-  }, [calculateBoardSize, isGameMode]);
 
   // Auto-scroll move history to active/latest move
   useEffect(() => {
@@ -368,10 +323,7 @@ export default function ChessPanel({
 
   const renderSparePieceColumn = (piecesList, colorName) => {
     return (
-      <div
-        ref={colorName === 'white' ? leftColRef : rightColRef}
-        className="glass-panel animate-fade-in spare-piece-column"
-      >
+      <div className="glass-panel animate-fade-in spare-piece-column">
         {piecesList.map((pt) => {
           const isActive = selectedBrush === pt;
           return (
@@ -441,7 +393,7 @@ export default function ChessPanel({
   }), [chessboardPosition, handlePieceDrop, handleSquareClick, boardOrientation, activeColors]);
 
   return (
-    <div className={`chess-panel-container ${isGameMode ? 'is-game-mode' : 'is-editor-mode'}`} style={{
+    <div className="chess-panel-container" style={{
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
@@ -527,26 +479,18 @@ export default function ChessPanel({
 
       {/* ===== Board & Side Columns (Editor) or Sidebar moves (Game) ===== */}
       <ChessboardProvider options={chessboardOptions}>
-        <div
-          ref={boardAreaRef}
-          className="chess-board-area"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
-            gap: 8,
-            flex: '1 1 0%',
-            minHeight: 0,
-            overflow: 'hidden',
-          }}
-        >
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          gap: 8,
+          flex: '1 1 auto',
+          minHeight: 0,
+        }}>
           {/* Left Column (Editor: White pieces, Game: Move notation column) - Desktop only for game notation */}
           {isGameMode ? (
-            <div
-              ref={leftColRef}
-              className="glass-panel animate-fade-in desktop-only"
-              style={{
+            <div className="glass-panel animate-fade-in desktop-only" style={{
               width: 120,
               display: 'flex',
               flexDirection: 'column',
@@ -609,15 +553,9 @@ export default function ChessPanel({
           )}
 
           {/* Board */}
-          <div
-            className="chessboard-wrapper"
-            style={{
-              width: boardSize ? `${boardSize}px` : '100%',
-              height: boardSize ? `${boardSize}px` : undefined,
-              maxWidth: boardSize ? `${boardSize}px` : 'min(800px, calc(100% - 160px), calc(100vh - 180px))',
-              maxHeight: boardSize ? `${boardSize}px` : undefined,
-            }}
-          >
+          <div className="chessboard-wrapper" style={{
+            maxWidth: 'min(800px, calc(100% - 160px), calc(100vh - 180px))'
+          }}>
             <Chessboard {...chessboardOptions} />
           </div>
 

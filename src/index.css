@@ -634,24 +634,10 @@ body {
     padding: 4px 6px !important;
     gap: 4px !important;
     height: 100% !important;
-    max-height: 100% !important;
-    min-height: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
     justify-content: space-between !important;
-    overflow: hidden !important;
-  }
-
-  .chess-board-area {
-    flex: 1 1 0% !important;
-    min-height: 0 !important;
-    max-height: 100% !important;
-    overflow: hidden !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
   }
 
   .spare-piece-column {
@@ -684,17 +670,11 @@ body {
 
   .chessboard-wrapper {
     max-width: min(calc(100% - 56px), calc(100dvh - 76px), calc(100vh - 76px)) !important;
-    max-height: calc(100dvh - 76px) !important;
     width: 100% !important;
     aspect-ratio: 1 !important;
     margin: 0 auto !important;
     box-shadow: 0 4px 16px var(--shadow-color) !important;
     border-width: 2px !important;
-  }
-
-  .chess-panel-container.is-game-mode .chessboard-wrapper {
-    max-width: min(100%, calc(100dvh - 110px), calc(100vh - 110px)) !important;
-    max-height: calc(100dvh - 110px) !important;
   }
 
   .pdf-panel-container {
