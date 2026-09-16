@@ -71,6 +71,7 @@ body {
   color: var(--text-primary);
   overflow: hidden;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   transition: background-color var(--transition-speed) var(--transition-timing),
@@ -193,6 +194,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   overflow: hidden;
   padding-top: env(safe-area-inset-top, 0px);
@@ -402,8 +404,8 @@ body {
   .app-layout {
     width: 100vw !important;
     max-width: 100vw !important;
+    height: 100% !important;
     height: 100dvh !important;
-    height: 100vh;
     overflow: hidden !important;
   }
 
@@ -505,7 +507,7 @@ body {
 }
 
 /* ===== Mobile Landscape (Short screens e.g. phones turned sideways) ===== */
-@media (max-height: 520px) and (orientation: landscape) {
+@media (max-height: 560px) and (orientation: landscape) {
   .desktop-only {
     display: none !important;
   }
@@ -543,8 +545,8 @@ body {
   .app-layout {
     width: 100vw !important;
     max-width: 100vw !important;
+    height: 100% !important;
     height: 100dvh !important;
-    height: 100vh;
     overflow: hidden !important;
   }
 
@@ -568,7 +570,8 @@ body {
     min-width: 180px !important;
     flex: 0 0 auto !important;
     height: 100% !important;
-    max-height: 100vh !important;
+    max-height: 100% !important;
+    max-height: 100dvh !important;
     overflow: hidden !important;
     border-right: 1px solid var(--border-glass) !important;
     border-bottom: none !important;
@@ -631,10 +634,24 @@ body {
     padding: 4px 6px !important;
     gap: 4px !important;
     height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
     justify-content: space-between !important;
+    overflow: hidden !important;
+  }
+
+  .chess-board-area {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
   }
 
   .spare-piece-column {
@@ -666,12 +683,18 @@ body {
   }
 
   .chessboard-wrapper {
-    max-width: min(calc(100% - 56px), calc(100vh - 72px)) !important;
+    max-width: min(calc(100% - 56px), calc(100dvh - 76px), calc(100vh - 76px)) !important;
+    max-height: calc(100dvh - 76px) !important;
     width: 100% !important;
     aspect-ratio: 1 !important;
     margin: 0 auto !important;
     box-shadow: 0 4px 16px var(--shadow-color) !important;
     border-width: 2px !important;
+  }
+
+  .chess-panel-container.is-game-mode .chessboard-wrapper {
+    max-width: min(100%, calc(100dvh - 110px), calc(100vh - 110px)) !important;
+    max-height: calc(100dvh - 110px) !important;
   }
 
   .pdf-panel-container {
