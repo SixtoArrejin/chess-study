@@ -424,12 +424,12 @@ export default function PdfPanel({ pdfFile, setPdfFile, onPositionDetected }) {
                   onClick={() => setIsSnipperActive(prev => !prev)}
                   disabled={isLoading || !pdfFile}
                   style={{
-                    padding: '0 10px',
+                    padding: '0 8px',
                     height: 26,
                     borderRadius: 6,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 6,
+                    gap: 5,
                     background: isSnipperActive ? 'rgba(var(--accent-color-rgb), 0.2)' : undefined,
                     borderColor: isSnipperActive ? 'var(--accent-color)' : undefined,
                     color: isSnipperActive ? 'var(--accent-color)' : undefined,
@@ -437,7 +437,7 @@ export default function PdfPanel({ pdfFile, setPdfFile, onPositionDetected }) {
                   title="Copiar tablero del libro al análisis (✨ Varita Mágica)"
                 >
                   <Sparkles style={{ width: 13, height: 13, color: 'var(--accent-color)' }} />
-                  <span style={{ fontSize: 11, fontWeight: 700 }}>Copiar tablero</span>
+                  <span className="desktop-only" style={{ fontSize: 11, fontWeight: 700 }}>Copiar tablero</span>
                 </button>
               </div>
 

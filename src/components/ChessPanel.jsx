@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Chess } from 'chess.js';
 import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import {
   Play, Settings2, RotateCcw, Trash2, ArrowLeftRight,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   AlertCircle, Maximize2, Minimize2, BrushCleaning,
-  Camera
+  Camera, RefreshCw
 } from 'lucide-react';
 import {
   positionObjectToFenPiecePlacement, fenToPositionObject,
