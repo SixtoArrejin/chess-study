@@ -348,6 +348,29 @@ body {
   animation: fadeIn 0.25s var(--transition-timing) forwards;
 }
 
+@keyframes toastSlideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.toast-notification {
+  position: fixed;
+  left: 50%;
+  bottom: max(32px, calc(16px + env(safe-area-inset-bottom, 16px)));
+  transform: translate(-50%, 0);
+  animation: toastSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 9999;
+  max-width: calc(100vw - 32px);
+  width: max-content;
+  pointer-events: auto;
+}
+
 @keyframes pulseGlow {
   0%, 100% { box-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.2); }
   50% { box-shadow: 0 0 18px rgba(var(--accent-color-rgb), 0.5); }

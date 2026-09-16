@@ -562,13 +562,8 @@ export default function App() {
       {/* Scanned Position / Warning Toast Notification */}
       {toastMessage && (
         <div
-          className="animate-fade-in"
+          className="toast-notification"
           style={{
-            position: 'fixed',
-            bottom: 24,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 9999,
             background:
               toastMessage.type === 'error'
                 ? 'rgba(239, 68, 68, 0.95)'
@@ -584,7 +579,7 @@ export default function App() {
             }`,
             backdropFilter: 'blur(16px)',
             borderRadius: 12,
-            padding: '10px 20px',
+            padding: '10px 18px',
             color:
               toastMessage.type === 'error' || toastMessage.type === 'warning'
                 ? '#ffffff'
@@ -594,10 +589,9 @@ export default function App() {
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.45)',
             letterSpacing: '0.02em',
-            maxWidth: '90vw',
-            textAlign: 'center'
+            textAlign: 'center',
           }}
         >
           {toastMessage.type === 'warning' ? (

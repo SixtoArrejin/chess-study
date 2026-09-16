@@ -360,7 +360,7 @@ export default function PdfSnipperOverlay({
           {isScanning
             ? 'Analizando tablero y piezas mágicamente...'
             : stagedBox
-            ? '¿El recuadro cubre todo el tablero? Presiona Enter o "Copiar tablero"'
+            ? '¿El recuadro cubre todo el tablero? Presiona "Copiar tablero"'
             : 'Haz clic sobre el tablero o arrastra un recuadro para seleccionarlo'}
         </span>
         <button
@@ -375,15 +375,14 @@ export default function PdfSnipperOverlay({
             borderRadius: 12,
             display: 'flex',
             alignItems: 'center',
-            gap: 4,
+            justifyContent: 'center',
             fontSize: 10,
             cursor: 'pointer',
             flexShrink: 0
           }}
-          title="Cancelar y salir (Esc)"
+          title="Cancelar y salir"
         >
           <X style={{ width: 12, height: 12 }} />
-          <span>Esc</span>
         </button>
       </div>
 
@@ -572,18 +571,10 @@ export default function PdfSnipperOverlay({
                 border: 'none',
                 cursor: 'pointer',
               }}
-              title="Confirmar y reconocer posición (Enter)"
+              title="Confirmar y reconocer posición"
             >
               <Check style={{ width: 13, height: 13 }} />
               <span>Copiar tablero</span>
-              <span style={{
-                fontSize: 9,
-                opacity: 0.9,
-                background: 'rgba(255, 255, 255, 0.25)',
-                padding: '1px 5px',
-                borderRadius: 4,
-                fontWeight: 800
-              }}>Enter</span>
             </button>
 
             <button
@@ -599,11 +590,10 @@ export default function PdfSnipperOverlay({
                 borderRadius: 14,
                 cursor: 'pointer',
               }}
-              title="Descartar recuadro y volver a seleccionar (Esc)"
+              title="Descartar recuadro y volver a seleccionar"
             >
               <RotateCcw style={{ width: 12, height: 12 }} />
               <span>Reintentar</span>
-              <span style={{ fontSize: 9, opacity: 0.6 }}>Esc</span>
             </button>
           </div>
         </>
