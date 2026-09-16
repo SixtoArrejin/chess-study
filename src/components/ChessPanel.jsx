@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard, ChessboardProvider, SparePiece } from 'react-chessboard';
 import {
   Play, Settings2, RotateCcw, Trash2, ArrowLeftRight,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  RefreshCw, AlertCircle, Maximize2, Minimize2, BrushCleaning
+  AlertCircle, Maximize2, Minimize2, BrushCleaning,
+  Camera
 } from 'lucide-react';
 import {
   positionObjectToFenPiecePlacement, fenToPositionObject,
   STARTING_POSITION_OBJECT, STARTING_FEN
 } from '../helpers/chessHelpers';
 import soundManager from '../helpers/soundHelper';
+import { scanChessboard } from '../helpers/chessScanner';
 
 /* ===== Board colour presets ===== */
 const THEME_COLORS = {
@@ -27,6 +28,8 @@ export default function ChessPanel({
   boardTheme,
   soundEnabled,
   onOpenSettings,
+  scannedPosition,
+  onPositionDetected,
 }) {
   /* ===== Mode ===== */
   const [isGameMode, setIsGameMode] = useState(() => {
@@ -79,8 +82,55 @@ export default function ChessPanel({
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [isScannedHighlight, setIsScannedHighlight] = useState(false);
+  const [isScanningImage, setIsScanningImage] = useState(false);
+  const imageInputRef = useRef(null);
+
   const mobileMoveTapeRef = useRef(null);
   const desktopNotationRef = useRef(null);
+
+  /* ===== Scanned Position Listener ===== */
+  useEffect(() => {
+    if (!scannedPosition || !scannedPosition.piecesObject) return;
+    setBoardPieces(scannedPosition.piecesObject);
+    if (scannedPosition.orientation) {
+      setBoardOrientation(scannedPosition.orientation);
+    }
+    if (isGameMode) {
+      try {
+        const newGame = new Chess(scannedPosition.fen);
+        setGame(newGame);
+        setFenHistory([scannedPosition.fen]);
+        setHistoryIndex(0);
+        setMoveList([]);
+      } catch {
+        setIsGameMode(false);
+      }
+    }
+    setIsScannedHighlight(true);
+    const timer = setTimeout(() => setIsScannedHighlight(false), 2400);
+    return () => clearTimeout(timer);
+  }, [scannedPosition]);
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsScanningImage(true);
+    try {
+      const res = await scanChessboard(file);
+      if (res.success && onPositionDetected) {
+        onPositionDetected(res);
+      } else {
+        alert(res.error || 'No se reconoció un tablero en la imagen.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al escanear la imagen.');
+    } finally {
+      setIsScanningImage(false);
+      e.target.value = '';
+    }
+  };
 
   // Auto-scroll move history to active/latest move
   useEffect(() => {
@@ -445,6 +495,21 @@ export default function ChessPanel({
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <button
+            onClick={() => imageInputRef.current?.click()}
+            disabled={isScanningImage}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--text-muted)', padding: 4, borderRadius: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'color 0.15s',
+            }}
+            title="Importar imagen de tablero (o presiona Ctrl+V)"
+            aria-label="Importar imagen de tablero"
+          >
+            <Camera style={{ width: 16, height: 16 }} />
+          </button>
+
+          <button
             onClick={handleToggleFullscreen}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
@@ -554,7 +619,10 @@ export default function ChessPanel({
 
           {/* Board */}
           <div className="chessboard-wrapper" style={{
-            maxWidth: 'min(800px, calc(100% - 160px), calc(100vh - 180px))'
+            maxWidth: 'min(800px, calc(100% - 160px), calc(100vh - 180px))',
+            boxShadow: isScannedHighlight ? '0 0 28px rgba(var(--accent-color-rgb), 0.75)' : undefined,
+            transition: 'box-shadow 0.4s ease',
+            borderRadius: 8,
           }}>
             <Chessboard {...chessboardOptions} />
           </div>
@@ -645,6 +713,22 @@ export default function ChessPanel({
                 onClick={() => setBoardOrientation(boardOrientation === 'white' ? 'black' : 'white')}
                 style={{ width: 32, height: 32, padding: 0 }} title="Girar Tablero">
                 <ArrowLeftRight style={{ width: 13, height: 13 }} />
+              </button>
+              <input
+                type="file"
+                ref={imageInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                style={{ display: 'none' }}
+              />
+              <button
+                className="glass-button"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={isScanningImage}
+                style={{ width: 32, height: 32, padding: 0 }}
+                title="Escanear imagen de tablero (o presiona Ctrl+V)"
+              >
+                <Camera style={{ width: 13, height: 13, color: 'var(--accent-color)' }} />
               </button>
             </div>
 

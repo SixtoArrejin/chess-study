@@ -1,5 +1,7 @@
-import React, { useRef, useState, useMemo, useEffect, useCallback } from 'react';
-import { Upload, FileText, ChevronLeft, ChevronRight, Plus, Minus, MoveHorizontal, BookOpen, RefreshCw, Trash2 } from 'lucide-react';
+import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
+import { Upload, FileText, ChevronLeft, ChevronRight, Plus, Minus, MoveHorizontal, BookOpen, Sparkles } from 'lucide-react';
+import PdfSnipperOverlay from './PdfSnipperOverlay';
+import { warmUpScanner } from '../helpers/chessScanner';
 
 const CLASSIC_BOOKS = [
   {
@@ -28,7 +30,7 @@ const CLASSIC_BOOKS = [
   }
 ];
 
-export default function PdfPanel({ pdfFile, setPdfFile }) {
+export default function PdfPanel({ pdfFile, setPdfFile, onPositionDetected }) {
   const fileInputRef = useRef(null);
   const iframeRef = useRef(null);
   const pdfUrlRef = useRef(null);
@@ -44,9 +46,16 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
   const [fitMode, setFitMode] = useState('width');
   const [zoomScale, setZoomScale] = useState(1.0);
   
+  const [isSnipperActive, setIsSnipperActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isClassicLoading, setIsClassicLoading] = useState(false);
   const [loadError, setLoadError] = useState(null);
+
+  useEffect(() => {
+    if (pdfFile) {
+      warmUpScanner();
+    }
+  }, [pdfFile]);
 
   const localStorageKey = useMemo(() => {
     if (!pdfFile) return '';
@@ -398,8 +407,8 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
                 </button>
               </div>
 
-              {/* PDF Aspect Ratio Fitting Controls */}
-              <div style={{ display: 'flex', alignItems: 'center' }}>
+              {/* PDF Aspect Ratio Fitting & Magic Scan Controls */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <button
                   className={`glass-button ${fitMode === 'width' ? 'active-outline' : ''}`}
                   onClick={() => setFitMode('width')}
@@ -407,6 +416,28 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
                   title="Ajustar al Ancho"
                 >
                   <MoveHorizontal style={{ width: 14, height: 14 }} />
+                </button>
+
+                {/* Magic Wand / Chessboard Scanner Tool */}
+                <button
+                  className={`glass-button ${isSnipperActive ? 'active-outline' : ''}`}
+                  onClick={() => setIsSnipperActive(prev => !prev)}
+                  disabled={isLoading || !pdfFile}
+                  style={{
+                    padding: '0 10px',
+                    height: 26,
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    background: isSnipperActive ? 'rgba(var(--accent-color-rgb), 0.2)' : undefined,
+                    borderColor: isSnipperActive ? 'var(--accent-color)' : undefined,
+                    color: isSnipperActive ? 'var(--accent-color)' : undefined,
+                  }}
+                  title="Copiar tablero del libro al análisis (✨ Varita Mágica)"
+                >
+                  <Sparkles style={{ width: 13, height: 13, color: 'var(--accent-color)' }} />
+                  <span style={{ fontSize: 11, fontWeight: 700 }}>Copiar tablero</span>
                 </button>
               </div>
 
@@ -447,6 +478,14 @@ export default function PdfPanel({ pdfFile, setPdfFile }) {
                 position: 'relative',
               }}
             >
+              {isSnipperActive && (
+                <PdfSnipperOverlay
+                  iframeRef={iframeRef}
+                  currentPage={currentPage}
+                  onClose={() => setIsSnipperActive(false)}
+                  onPositionDetected={onPositionDetected}
+                />
+              )}
               {isLoading && (
                 <div style={{
                   position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,

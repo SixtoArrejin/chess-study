@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Settings, BookOpen, RefreshCw, Trash2, WifiOff } from 'lucide-react';
+import { Settings, BookOpen, RefreshCw, Trash2, WifiOff, Sparkles } from 'lucide-react';
 import ChessPanel from './components/ChessPanel';
 import PdfPanel from './components/PdfPanel';
 import SettingsMenu from './components/SettingsMenu';
 import logo from './assets/logo.png';
 import { getPdfFromDB, savePdfToDB, clearPdfFromDB } from './helpers/pdfStore';
 import soundManager from './helpers/soundHelper';
+import { scanChessboard } from './helpers/chessScanner';
 
 export default function App() {
   /* ========= SETTINGS STATE ========= */
@@ -89,6 +90,63 @@ export default function App() {
       await clearPdfFromDB();
     }
   }, []);
+
+  /* ========= SCANNED POSITION & TOAST STATE ========= */
+  const [scannedPosition, setScannedPosition] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const handlePositionDetected = useCallback((result) => {
+    if (!result || !result.piecesObject) return;
+    setScannedPosition({
+      ...result,
+      timestamp: Date.now(),
+    });
+    soundManager.playMoveSound(false);
+    setToastMessage({
+      text: `¡Tablero copiado al análisis! (${result.confidence}% confianza) ✨`,
+      type: 'success',
+    });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4500);
+  }, []);
+
+  // Global clipboard paste listener for screenshots (Ctrl+V)
+  useEffect(() => {
+    const handlePaste = async (e) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+        return;
+      }
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          e.preventDefault();
+          const file = items[i].getAsFile();
+          if (file) {
+            setToastMessage({ text: 'Reconociendo imagen del portapapeles... ✨', type: 'info' });
+            try {
+              const res = await scanChessboard(file);
+              if (res.success) {
+                handlePositionDetected(res);
+              } else {
+                setToastMessage({ text: res.error || 'No se reconoció un tablero en la imagen.', type: 'error' });
+                setTimeout(() => setToastMessage(null), 4000);
+              }
+            } catch (err) {
+              setToastMessage({ text: 'Error al procesar la imagen pegada.', type: 'error' });
+              setTimeout(() => setToastMessage(null), 4000);
+            }
+          }
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [handlePositionDetected]);
 
   /* ========= THEME EFFECT ========= */
   useEffect(() => {
@@ -180,6 +238,8 @@ export default function App() {
         boardTheme={boardTheme}
         soundEnabled={soundEnabled}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        scannedPosition={scannedPosition}
+        onPositionDetected={handlePositionDetected}
       />
     </div>
   );
@@ -190,6 +250,7 @@ export default function App() {
         <PdfPanel 
           pdfFile={pdfFile} 
           setPdfFile={handleSetPdf} 
+          onPositionDetected={handlePositionDetected}
         />
       ) : pdfFile ? (
         <div style={{
@@ -206,6 +267,7 @@ export default function App() {
         <PdfPanel 
           pdfFile={null} 
           setPdfFile={handleSetPdf} 
+          onPositionDetected={handlePositionDetected}
         />
       )}
     </div>
@@ -465,6 +527,36 @@ export default function App() {
 
         {pdfPanelEl}
       </div>
+
+      {/* Scanned Position Toast Notification */}
+      {toastMessage && (
+        <div
+          className="animate-fade-in"
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            background: toastMessage.type === 'error' ? 'rgba(239, 68, 68, 0.95)' : 'var(--bg-glass-active)',
+            border: `1px solid ${toastMessage.type === 'error' ? '#ef4444' : 'var(--accent-color)'}`,
+            backdropFilter: 'blur(16px)',
+            borderRadius: 12,
+            padding: '10px 20px',
+            color: toastMessage.type === 'error' ? '#ffffff' : 'var(--text-primary)',
+            fontSize: 12,
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
+            letterSpacing: '0.02em',
+          }}
+        >
+          <Sparkles style={{ width: 16, height: 16, color: toastMessage.type === 'error' ? '#fff' : 'var(--accent-color)', flexShrink: 0 }} />
+          <span>{toastMessage.text}</span>
+        </div>
+      )}
     </div>
   );
 }

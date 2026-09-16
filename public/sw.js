@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chess-study-shell-v2';
+const CACHE_NAME = 'chess-study-shell-v3';
 const BOOKS_CACHE = 'chess-study-books-v1';
 
 const DB_NAME = 'ChessStudyDB';
@@ -7,6 +7,7 @@ const DB_VERSION = 1;
 
 // Recursos esenciales a precachear en install para disponibilidad offline inmediata
 const PRECACHE_ASSETS = [
+  '/',
   '/',
   '/index.html',
   '/manifest.json',
@@ -23,7 +24,10 @@ const PRECACHE_ASSETS = [
   '/pdfjs/web/viewer.mjs',
   '/pdfjs/build/pdf.mjs',
   '/pdfjs/build/pdf.worker.mjs',
-  '/pdfjs/web/locale/locale.json'
+  '/pdfjs/web/locale/locale.json',
+  '/models/chess-tiles-v2.onnx',
+  '/ort/ort-wasm-simd-threaded.wasm',
+  '/ort/ort-wasm-simd-threaded.mjs'
 ];
 
 function openDB() {
