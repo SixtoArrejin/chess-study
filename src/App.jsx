@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Settings, BookOpen, RefreshCw, Trash2, WifiOff, Sparkles } from 'lucide-react';
+import { Settings, BookOpen, RefreshCw, Trash2, WifiOff, Sparkles, AlertCircle } from 'lucide-react';
 import ChessPanel from './components/ChessPanel';
 import PdfPanel from './components/PdfPanel';
 import SettingsMenu from './components/SettingsMenu';
@@ -91,12 +91,32 @@ export default function App() {
     }
   }, []);
 
+  /* ========= GAME MODE STATE ========= */
+  const [isGameMode, setIsGameMode] = useState(() => {
+    const saved = localStorage.getItem('chess-study-is-game-mode');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  const showFreeModeWarning = useCallback(() => {
+    setToastMessage({
+      text: 'Para utilizar la función de copiar tablero, el tablero debe estar en modo libre.',
+      type: 'warning',
+    });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4500);
+  }, []);
+
   /* ========= SCANNED POSITION & TOAST STATE ========= */
   const [scannedPosition, setScannedPosition] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
   const handlePositionDetected = useCallback((result) => {
     if (!result || !result.piecesObject) return;
+    if (isGameMode) {
+      showFreeModeWarning();
+      return;
+    }
     setScannedPosition({
       ...result,
       timestamp: Date.now(),
@@ -109,7 +129,7 @@ export default function App() {
     setTimeout(() => {
       setToastMessage(null);
     }, 4500);
-  }, []);
+  }, [isGameMode, showFreeModeWarning]);
 
   // Global clipboard paste listener for screenshots (Ctrl+V)
   useEffect(() => {
@@ -123,6 +143,10 @@ export default function App() {
       for (let i = 0; i < items.length; i++) {
         if (items[i].type.startsWith('image/')) {
           e.preventDefault();
+          if (isGameMode) {
+            showFreeModeWarning();
+            return;
+          }
           const file = items[i].getAsFile();
           if (file) {
             setToastMessage({ text: 'Reconociendo imagen del portapapeles... ✨', type: 'info' });
@@ -146,7 +170,7 @@ export default function App() {
 
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
-  }, [handlePositionDetected]);
+  }, [handlePositionDetected, isGameMode, showFreeModeWarning]);
 
   /* ========= THEME EFFECT ========= */
   useEffect(() => {
@@ -240,6 +264,9 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         scannedPosition={scannedPosition}
         onPositionDetected={handlePositionDetected}
+        isGameMode={isGameMode}
+        setIsGameMode={setIsGameMode}
+        onRequireFreeMode={showFreeModeWarning}
       />
     </div>
   );
@@ -251,6 +278,8 @@ export default function App() {
           pdfFile={pdfFile} 
           setPdfFile={handleSetPdf} 
           onPositionDetected={handlePositionDetected}
+          isGameMode={isGameMode}
+          onRequireFreeMode={showFreeModeWarning}
         />
       ) : pdfFile ? (
         <div style={{
@@ -268,6 +297,8 @@ export default function App() {
           pdfFile={null} 
           setPdfFile={handleSetPdf} 
           onPositionDetected={handlePositionDetected}
+          isGameMode={isGameMode}
+          onRequireFreeMode={showFreeModeWarning}
         />
       )}
     </div>
@@ -528,7 +559,7 @@ export default function App() {
         {pdfPanelEl}
       </div>
 
-      {/* Scanned Position Toast Notification */}
+      {/* Scanned Position / Warning Toast Notification */}
       {toastMessage && (
         <div
           className="animate-fade-in"
@@ -538,12 +569,26 @@ export default function App() {
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 9999,
-            background: toastMessage.type === 'error' ? 'rgba(239, 68, 68, 0.95)' : 'var(--bg-glass-active)',
-            border: `1px solid ${toastMessage.type === 'error' ? '#ef4444' : 'var(--accent-color)'}`,
+            background:
+              toastMessage.type === 'error'
+                ? 'rgba(239, 68, 68, 0.95)'
+                : toastMessage.type === 'warning'
+                ? 'rgba(217, 119, 6, 0.95)'
+                : 'var(--bg-glass-active)',
+            border: `1px solid ${
+              toastMessage.type === 'error'
+                ? '#ef4444'
+                : toastMessage.type === 'warning'
+                ? '#f59e0b'
+                : 'var(--accent-color)'
+            }`,
             backdropFilter: 'blur(16px)',
             borderRadius: 12,
             padding: '10px 20px',
-            color: toastMessage.type === 'error' ? '#ffffff' : 'var(--text-primary)',
+            color:
+              toastMessage.type === 'error' || toastMessage.type === 'warning'
+                ? '#ffffff'
+                : 'var(--text-primary)',
             fontSize: 12,
             fontWeight: 700,
             display: 'flex',
@@ -551,9 +596,22 @@ export default function App() {
             gap: 10,
             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
             letterSpacing: '0.02em',
+            maxWidth: '90vw',
+            textAlign: 'center'
           }}
         >
-          <Sparkles style={{ width: 16, height: 16, color: toastMessage.type === 'error' ? '#fff' : 'var(--accent-color)', flexShrink: 0 }} />
+          {toastMessage.type === 'warning' ? (
+            <AlertCircle style={{ width: 16, height: 16, color: '#fff', flexShrink: 0 }} />
+          ) : (
+            <Sparkles
+              style={{
+                width: 16,
+                height: 16,
+                color: toastMessage.type === 'error' ? '#fff' : 'var(--accent-color)',
+                flexShrink: 0,
+              }}
+            />
+          )}
           <span>{toastMessage.text}</span>
         </div>
       )}

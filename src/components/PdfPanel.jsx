@@ -30,7 +30,13 @@ const CLASSIC_BOOKS = [
   }
 ];
 
-export default function PdfPanel({ pdfFile, setPdfFile, onPositionDetected }) {
+export default function PdfPanel({ 
+  pdfFile, 
+  setPdfFile, 
+  onPositionDetected, 
+  isGameMode = false, 
+  onRequireFreeMode 
+}) {
   const fileInputRef = useRef(null);
   const iframeRef = useRef(null);
   const pdfUrlRef = useRef(null);
@@ -50,6 +56,24 @@ export default function PdfPanel({ pdfFile, setPdfFile, onPositionDetected }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isClassicLoading, setIsClassicLoading] = useState(false);
   const [loadError, setLoadError] = useState(null);
+
+  useEffect(() => {
+    if (isGameMode && isSnipperActive) {
+      setIsSnipperActive(false);
+    }
+  }, [isGameMode, isSnipperActive]);
+
+  const handleToggleSnipper = () => {
+    if (isGameMode) {
+      if (onRequireFreeMode) {
+        onRequireFreeMode();
+      } else {
+        alert('Para utilizar la función de copiar tablero, el tablero debe estar en modo libre.');
+      }
+      return;
+    }
+    setIsSnipperActive(prev => !prev);
+  };
 
   useEffect(() => {
     if (pdfFile) {
@@ -421,7 +445,7 @@ export default function PdfPanel({ pdfFile, setPdfFile, onPositionDetected }) {
                 {/* Magic Wand / Chessboard Scanner Tool */}
                 <button
                   className={`glass-button ${isSnipperActive ? 'active-outline' : ''}`}
-                  onClick={() => setIsSnipperActive(prev => !prev)}
+                  onClick={handleToggleSnipper}
                   disabled={isLoading || !pdfFile}
                   style={{
                     padding: '0 8px',
@@ -433,8 +457,13 @@ export default function PdfPanel({ pdfFile, setPdfFile, onPositionDetected }) {
                     background: isSnipperActive ? 'rgba(var(--accent-color-rgb), 0.2)' : undefined,
                     borderColor: isSnipperActive ? 'var(--accent-color)' : undefined,
                     color: isSnipperActive ? 'var(--accent-color)' : undefined,
+                    opacity: isGameMode ? 0.75 : 1,
                   }}
-                  title="Copiar tablero del libro al análisis (✨ Varita Mágica)"
+                  title={
+                    isGameMode
+                      ? 'Para utilizar la función de copiar tablero, el tablero debe estar en modo libre'
+                      : 'Copiar tablero del libro al análisis (✨ Varita Mágica)'
+                  }
                 >
                   <Sparkles style={{ width: 13, height: 13, color: 'var(--accent-color)' }} />
                   <span className="desktop-only" style={{ fontSize: 11, fontWeight: 700 }}>Copiar tablero</span>

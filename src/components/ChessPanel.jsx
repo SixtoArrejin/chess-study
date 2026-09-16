@@ -31,12 +31,18 @@ export default function ChessPanel({
   onOpenSettings,
   scannedPosition,
   onPositionDetected,
+  isGameMode: controlledIsGameMode,
+  setIsGameMode: controlledSetIsGameMode,
+  onRequireFreeMode,
 }) {
   /* ===== Mode ===== */
-  const [isGameMode, setIsGameMode] = useState(() => {
+  const [internalIsGameMode, setInternalIsGameMode] = useState(() => {
     const saved = localStorage.getItem('chess-study-is-game-mode');
     return saved ? JSON.parse(saved) : false;
   });
+
+  const isGameMode = controlledIsGameMode !== undefined ? controlledIsGameMode : internalIsGameMode;
+  const setIsGameMode = controlledSetIsGameMode !== undefined ? controlledSetIsGameMode : setInternalIsGameMode;
 
   /* ===== Editor state ===== */
   const [boardPieces, setBoardPieces] = useState(() => {
@@ -116,6 +122,12 @@ export default function ChessPanel({
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (isGameMode) {
+      if (onRequireFreeMode) onRequireFreeMode();
+      else alert('Para utilizar la función de copiar tablero, el tablero debe estar en modo libre.');
+      e.target.value = '';
+      return;
+    }
     setIsScanningImage(true);
     try {
       const res = await scanChessboard(file);
@@ -496,7 +508,14 @@ export default function ChessPanel({
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <button
-            onClick={() => imageInputRef.current?.click()}
+            onClick={() => {
+              if (isGameMode) {
+                if (onRequireFreeMode) onRequireFreeMode();
+                else alert('Para utilizar la función de copiar tablero, el tablero debe estar en modo libre.');
+                return;
+              }
+              imageInputRef.current?.click();
+            }}
             disabled={isScanningImage}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
@@ -504,7 +523,7 @@ export default function ChessPanel({
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'color 0.15s',
             }}
-            title="Importar imagen de tablero (o presiona Ctrl+V)"
+            title={isGameMode ? "Para utilizar la función de copiar tablero, el tablero debe estar en modo libre" : "Importar imagen de tablero (o presiona Ctrl+V)"}
             aria-label="Importar imagen de tablero"
           >
             <Camera style={{ width: 16, height: 16 }} />
