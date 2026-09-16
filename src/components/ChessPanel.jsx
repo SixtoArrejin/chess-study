@@ -508,28 +508,6 @@ export default function ChessPanel({
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <button
-            onClick={() => {
-              if (isGameMode) {
-                if (onRequireFreeMode) onRequireFreeMode();
-                else alert('Para utilizar la función de copiar tablero, el tablero debe estar en modo libre.');
-                return;
-              }
-              imageInputRef.current?.click();
-            }}
-            disabled={isScanningImage}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--text-muted)', padding: 4, borderRadius: 6,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'color 0.15s',
-            }}
-            title={isGameMode ? "Para utilizar la función de copiar tablero, el tablero debe estar en modo libre" : "Importar imagen de tablero (o presiona Ctrl+V)"}
-            aria-label="Importar imagen de tablero"
-          >
-            <Camera style={{ width: 16, height: 16 }} />
-          </button>
-
-          <button
             onClick={handleToggleFullscreen}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
