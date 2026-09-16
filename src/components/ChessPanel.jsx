@@ -14,6 +14,7 @@ import {
 } from '../helpers/chessHelpers';
 import soundManager from '../helpers/soundHelper';
 import { scanChessboard } from '../helpers/chessScanner';
+import ChessFigurine from './ChessFigurine';
 
 /* ===== Board colour presets ===== */
 const THEME_COLORS = {
@@ -217,6 +218,52 @@ export default function ChessPanel({
     }
     return obj;
   }, [currentPieces]);
+
+  const startingTurn = useMemo(() => {
+    return fenHistory[0]?.split(' ')[1] || 'w';
+  }, [fenHistory]);
+
+  const startMoveNum = useMemo(() => {
+    const num = parseInt(fenHistory[0]?.split(' ')[5] || '1', 10);
+    return isNaN(num) || num < 1 ? 1 : num;
+  }, [fenHistory]);
+
+  const moveRows = useMemo(() => {
+    const rows = [];
+    if (startingTurn === 'w') {
+      const totalRows = Math.ceil(moveList.length / 2);
+      for (let i = 0; i < totalRows; i++) {
+        const wi = i * 2;
+        const bi = i * 2 + 1;
+        rows.push({
+          num: startMoveNum + i,
+          white: moveList[wi] ? { san: moveList[wi], historyIdx: wi + 1 } : null,
+          black: moveList[bi] ? { san: moveList[bi], historyIdx: bi + 1 } : null,
+        });
+      }
+    } else {
+      // Black started first: Row 0 has White '...' and Black moveList[0]
+      const totalRows = moveList.length === 0 ? 0 : Math.ceil((moveList.length + 1) / 2);
+      for (let i = 0; i < totalRows; i++) {
+        if (i === 0) {
+          rows.push({
+            num: startMoveNum,
+            white: { placeholder: '...' },
+            black: moveList[0] ? { san: moveList[0], historyIdx: 1 } : null,
+          });
+        } else {
+          const wi = i * 2 - 1;
+          const bi = i * 2;
+          rows.push({
+            num: startMoveNum + i,
+            white: moveList[wi] ? { san: moveList[wi], historyIdx: wi + 1 } : null,
+            black: moveList[bi] ? { san: moveList[bi], historyIdx: bi + 1 } : null,
+          });
+        }
+      }
+    }
+    return rows;
+  }, [moveList, startingTurn, startMoveNum]);
 
   /* ===== Effects ===== */
   useEffect(() => { setErrorMessage(''); if (!isGameMode) setSelectedBrush(null); }, [isGameMode]);
@@ -573,38 +620,72 @@ export default function ChessPanel({
                 flex: 1,
                 paddingRight: 2,
               }}>
-                {moveList.length === 0 ? (
+                {moveRows.length === 0 ? (
                   <div style={{ fontSize: 9, color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center', marginTop: 20 }}>
                     Sin jugadas
                   </div>
                 ) : (
-                  Array.from({ length: Math.ceil(moveList.length / 2) }).map((_, i) => {
-                    const wi = i * 2, bi = i * 2 + 1;
+                  moveRows.map((row) => {
+                    const isWhiteActive = row.white?.historyIdx === historyIndex;
+                    const isBlackActive = row.black?.historyIdx === historyIndex;
                     return (
-                      <div key={i} style={{ display: 'grid', gridTemplateColumns: '18px 1fr 1fr', gap: 2, fontSize: 9, padding: '2px 0' }}>
-                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>{i + 1}.</span>
-                        <span
-                          onClick={() => navigateTo(wi + 1)}
-                          style={{
-                            cursor: 'pointer',
-                            fontWeight: historyIndex === wi + 1 ? 700 : 400,
-                            color: historyIndex === wi + 1 ? 'var(--accent-color)' : 'var(--text-primary)',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >{moveList[wi]}</span>
-                        <span
-                          onClick={() => navigateTo(bi + 1)}
-                          style={{
-                            cursor: 'pointer',
-                            fontWeight: historyIndex === bi + 1 ? 700 : 400,
-                            color: historyIndex === bi + 1 ? 'var(--accent-color)' : 'var(--text-primary)',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >{moveList[bi] || ''}</span>
+                      <div key={row.num} style={{ display: 'grid', gridTemplateColumns: '22px 1fr 1fr', gap: 4, fontSize: 9, padding: '2px 0', alignItems: 'center' }}>
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>{row.num}.</span>
+                        {row.white?.placeholder ? (
+                          <span
+                            onClick={() => navigateTo(0)}
+                            className={historyIndex === 0 ? 'active-move' : ''}
+                            style={{
+                              cursor: 'pointer',
+                              fontWeight: historyIndex === 0 ? 700 : 400,
+                              color: historyIndex === 0 ? 'var(--accent-color)' : 'var(--text-muted)',
+                              letterSpacing: '0.1em',
+                            }}
+                            title="Posición inicial"
+                          >
+                            ...
+                          </span>
+                        ) : row.white ? (
+                          <span
+                            onClick={() => navigateTo(row.white.historyIdx)}
+                            className={isWhiteActive ? 'active-move' : ''}
+                            style={{
+                              cursor: 'pointer',
+                              fontWeight: isWhiteActive ? 700 : 400,
+                              color: isWhiteActive ? 'var(--accent-color)' : 'var(--text-primary)',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <ChessFigurine san={row.white.san} isWhite={true} />
+                          </span>
+                        ) : (
+                          <span />
+                        )}
+
+                        {row.black ? (
+                          <span
+                            onClick={() => navigateTo(row.black.historyIdx)}
+                            className={isBlackActive ? 'active-move' : ''}
+                            style={{
+                              cursor: 'pointer',
+                              fontWeight: isBlackActive ? 700 : 400,
+                              color: isBlackActive ? 'var(--accent-color)' : 'var(--text-primary)',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <ChessFigurine san={row.black.san} isWhite={false} />
+                          </span>
+                        ) : (
+                          <span />
+                        )}
                       </div>
                     );
                   })
@@ -650,25 +731,45 @@ export default function ChessPanel({
               </div>
             ) : (
               moveList.map((moveSan, idx) => {
-                const isWhite = idx % 2 === 0;
-                const moveNum = Math.floor(idx / 2) + 1;
+                let isWhite;
+                let moveNum;
+                let label = '';
+
+                if (startingTurn === 'w') {
+                  isWhite = idx % 2 === 0;
+                  moveNum = startMoveNum + Math.floor(idx / 2);
+                  if (isWhite) label = `${moveNum}.`;
+                } else {
+                  if (idx === 0) {
+                    isWhite = false;
+                    moveNum = startMoveNum;
+                    label = `${moveNum}...`;
+                  } else {
+                    isWhite = idx % 2 === 1;
+                    moveNum = startMoveNum + Math.floor((idx + 1) / 2);
+                    if (isWhite) label = `${moveNum}.`;
+                  }
+                }
+
                 const isCurrent = historyIndex === idx + 1;
                 return (
                   <button
                     key={idx}
                     onClick={() => navigateTo(idx + 1)}
-                    className={`glass-button ${isCurrent ? 'active' : ''}`}
+                    className={`glass-button ${isCurrent ? 'active active-move' : ''}`}
                     style={{
                       padding: '2px 6px',
                       fontSize: 9,
                       height: 22,
                       borderRadius: 4,
                       flexShrink: 0,
-                      gap: 2,
+                      gap: 3,
+                      display: 'inline-flex',
+                      alignItems: 'center',
                     }}
                   >
-                    {isWhite && <span style={{ opacity: 0.6 }}>{moveNum}.</span>}
-                    <span>{moveSan}</span>
+                    {label && <span style={{ opacity: 0.6 }}>{label}</span>}
+                    <ChessFigurine san={moveSan} isWhite={isWhite} />
                   </button>
                 );
               })
