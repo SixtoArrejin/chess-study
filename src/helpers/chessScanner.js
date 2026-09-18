@@ -101,7 +101,7 @@ async function sourceToGray(source) {
  *   corners: Object
  * }>}
  */
-export async function scanChessboard(imageSource, _options = {}) {
+export async function scanChessboard(imageSource, options = {}) {
   try {
     const session = await getScannerSession();
     const gray = await sourceToGray(imageSource);
@@ -184,8 +184,18 @@ export async function scanChessboard(imageSource, _options = {}) {
       };
     }
 
-    // Determine orientation (white vs black at bottom)
-    const { placement, orientation } = resolveOrientation(bestResult.placement);
+    // Determine orientation: by default, preserve the natural diagram placement
+    // (White at bottom, rank 8 at top, rank 1 at bottom, file a on left, file h on right).
+    // Chess books and PDF diagrams are consistently printed with White at bottom.
+    // We avoid automatic pawn-based inversion because it fails on studies with advanced/passed pawns.
+    let placement = bestResult.placement;
+    let orientation = 'white';
+
+    if (options.autoOrientation) {
+      const resolved = resolveOrientation(bestResult.placement);
+      placement = resolved.placement;
+      orientation = resolved.orientation;
+    }
     
     // Infer default castling/en-passant and format FEN
     const fullFen = placementToFen(placement, 'w');

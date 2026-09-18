@@ -101,9 +101,7 @@ export default function ChessPanel({
   useEffect(() => {
     if (!scannedPosition || !scannedPosition.piecesObject) return;
     setBoardPieces(scannedPosition.piecesObject);
-    if (scannedPosition.orientation) {
-      setBoardOrientation(scannedPosition.orientation);
-    }
+    // Preservar la orientación actual del tablero configurada por el usuario
     if (isGameMode) {
       try {
         const newGame = new Chess(scannedPosition.fen);
