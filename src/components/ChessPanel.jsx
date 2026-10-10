@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import {
   positionObjectToFenPiecePlacement, fenToPositionObject,
-  STARTING_POSITION_OBJECT, STARTING_FEN
+  STARTING_POSITION_OBJECT, STARTING_FEN,
+  inferCastlingRights, sanitizeFen
 } from '../helpers/chessHelpers';
 import soundManager from '../helpers/soundHelper';
 import { scanChessboard } from '../helpers/chessScanner';
@@ -66,7 +67,7 @@ export default function ChessPanel({
       const index = savedIndex ? parseInt(savedIndex, 10) : 0;
       const currentFenInHistory = history[index] || STARTING_FEN;
       try {
-        return new Chess(currentFenInHistory);
+        return new Chess(sanitizeFen(currentFenInHistory));
       } catch (e) {
         console.error("Error restoring Chess game:", e);
         return null;
@@ -76,7 +77,16 @@ export default function ChessPanel({
   });
   const [fenHistory, setFenHistory] = useState(() => {
     const saved = localStorage.getItem('chess-study-fen-history');
-    return saved ? JSON.parse(saved) : [STARTING_FEN];
+    if (!saved) return [STARTING_FEN];
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map(sanitizeFen);
+      }
+    } catch {
+      // fallback
+    }
+    return [STARTING_FEN];
   });
   const [historyIndex, setHistoryIndex] = useState(() => {
     const saved = localStorage.getItem('chess-study-history-index');
@@ -104,9 +114,10 @@ export default function ChessPanel({
     // Preservar la orientación actual del tablero configurada por el usuario
     if (isGameMode) {
       try {
-        const newGame = new Chess(scannedPosition.fen);
+        const cleanedFen = sanitizeFen(scannedPosition.fen);
+        const newGame = new Chess(cleanedFen);
         setGame(newGame);
-        setFenHistory([scannedPosition.fen]);
+        setFenHistory([cleanedFen]);
         setHistoryIndex(0);
         setMoveList([]);
       } catch {
@@ -299,17 +310,27 @@ export default function ChessPanel({
 
   useEffect(() => {
     if (!isGameMode || !game) return;
-    if (game.isGameOver()) {
-      if (game.isCheckmate()) {
-        const winner = game.turn() === 'w' ? 'Negras' : 'Blancas';
-        setGameStatusText(`¡JAQUE MATE! Ganaron las ${winner}`);
-      } else if (game.isStalemate()) setGameStatusText('Tablas por ahogado');
-      else if (game.isThreefoldRepetition()) setGameStatusText('Tablas por triple repetición');
-      else if (game.isInsufficientMaterial()) setGameStatusText('Tablas por material insuficiente');
-      else setGameStatusText('Tablas');
-    } else {
-      const turn = game.turn() === 'w' ? 'Blancas' : 'Negras';
-      setGameStatusText(game.inCheck() ? `¡JAQUE! Juegan ${turn}` : `Juegan ${turn}`);
+    try {
+      if (game.isGameOver()) {
+        if (game.isCheckmate()) {
+          const winner = game.turn() === 'w' ? 'Negras' : 'Blancas';
+          setGameStatusText(`¡JAQUE MATE! Ganaron las ${winner}`);
+        } else if (game.isStalemate()) setGameStatusText('Tablas por ahogado');
+        else if (game.isThreefoldRepetition()) setGameStatusText('Tablas por triple repetición');
+        else if (game.isInsufficientMaterial()) setGameStatusText('Tablas por material insuficiente');
+        else setGameStatusText('Tablas');
+      } else {
+        const turn = game.turn() === 'w' ? 'Blancas' : 'Negras';
+        setGameStatusText(game.inCheck() ? `¡JAQUE! Juegan ${turn}` : `Juegan ${turn}`);
+      }
+    } catch (err) {
+      console.warn('Error evaluando estado de la partida:', err);
+      try {
+        const turn = game.turn() === 'w' ? 'Blancas' : 'Negras';
+        setGameStatusText(`Juegan ${turn}`);
+      } catch {
+        setGameStatusText('Partida en curso');
+      }
     }
   }, [currentFen, isGameMode, game]);
 
@@ -356,7 +377,7 @@ export default function ChessPanel({
 
     // Game mode
     try {
-      const currentFenInHistory = fenHistory[historyIndex];
+      const currentFenInHistory = sanitizeFen(fenHistory[historyIndex]);
       const g = new Chess(currentFenInHistory);
       const move = g.move({ from: sourceSquare, to: targetSquare, promotion: 'q' });
       if (!move) return false;
@@ -389,9 +410,10 @@ export default function ChessPanel({
   const handleSelectStartingColor = (color) => {
     setShowTurnModal(false);
     const pp = positionObjectToFenPiecePlacement(boardPieces);
+    const castling = inferCastlingRights(boardPieces);
     let tempGame = null, initialFen = '';
     try {
-      initialFen = `${pp} ${color} KQkq - 0 1`;
+      initialFen = `${pp} ${color} ${castling} - 0 1`;
       tempGame = new Chess(initialFen);
     } catch {
       try {
@@ -413,7 +435,16 @@ export default function ChessPanel({
     if (i !== historyIndex) {
       soundManager.playMoveSound(false);
     }
-    setHistoryIndex(i); game.load(fenHistory[i]);
+    setHistoryIndex(i);
+    try {
+      game.load(fenHistory[i]);
+    } catch {
+      try {
+        game.load(sanitizeFen(fenHistory[i]));
+      } catch (err) {
+        console.warn('Error loading FEN on navigate:', err);
+      }
+    }
   }, [isGameMode, game, fenHistory, historyIndex]);
 
   const handleRevertToEditor = () => {
